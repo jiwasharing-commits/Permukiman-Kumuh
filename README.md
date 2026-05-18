@@ -26,3 +26,9 @@ Langkah berikutnya:
 - Buka: `http://localhost:8000`
 
 - Tabel langsung tampil saat halaman dibuka (tanpa login), dengan fitur pencarian, filter, pagination, dan reload data.
+
+
+## Validasi Jumlah Data
+- Jalankan: `./scripts/validate_kawasan_csv.py`
+- Script akan membuat file `data/lokasi_kewenangan_kabupaten.cleaned.csv` (hasil deduplikasi) dan menampilkan total baris unik.
+- Target validasi: `602` data unik.
