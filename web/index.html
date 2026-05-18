@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Kawasan Kumuh</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fb; color: #1f2937; }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .card { background: white; padding: 14px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
+    h1 { margin-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+    th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 10px; font-size: 14px; }
+    th { background: #0f766e; color: white; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; color: white; }
+    .ringan { background: #16a34a; }
+    .sedang { background: #d97706; }
+    .berat { background: #dc2626; }
+    .filter { margin: 12px 0; display: flex; gap: 8px; }
+    input, select { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Kawasan Kumuh</h1>
+  <p>Contoh tampilan awal untuk data 600+ lokasi.</p>
+
+  <section class="cards">
+    <article class="card"><strong>Total Kawasan</strong><div>600 (target)</div></article>
+    <article class="card"><strong>Kecamatan Tercakup</strong><div>25</div></article>
+    <article class="card"><strong>Status Proses/Selesai</strong><div>340</div></article>
+  </section>
+
+  <div class="filter">
+    <input type="text" placeholder="Cari nama kawasan..." />
+    <select>
+      <option>Semua Kecamatan</option>
+      <option>Kec. Pesisir</option>
+      <option>Kec. Tengah</option>
+      <option>Kec. Timur</option>
+    </select>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Kode</th>
+        <th>Nama Kawasan</th>
+        <th>Wilayah</th>
+        <th>Luas (Ha)</th>
+        <th>Tingkat Kumuh</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>KKH-001</td>
+        <td>Kawasan Sungai Baru Jl. Melati</td>
+        <td>Sungai Baru, Kec. Pesisir</td>
+        <td>12.50</td>
+        <td><span class="badge sedang">Sedang</span></td>
+        <td>Proses</td>
+      </tr>
+      <tr>
+        <td>KKH-003</td>
+        <td>Kawasan Bukit Timur</td>
+        <td>Bukit Timur, Kec. Timur</td>
+        <td>25.75</td>
+        <td><span class="badge berat">Berat</span></td>
+        <td>Proses</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>
