@@ -6,72 +6,140 @@
   <title>Dashboard Kawasan Kumuh</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fb; color: #1f2937; }
+    .hidden { display: none; }
+    .login-wrap { max-width: 420px; margin: 42px auto; }
+    .panel { background: white; padding: 18px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
     .cards { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
     .card { background: white; padding: 14px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
     h1 { margin-bottom: 4px; }
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
     th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 10px; font-size: 14px; }
     th { background: #0f766e; color: white; }
-    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; color: white; }
-    .ringan { background: #16a34a; }
-    .sedang { background: #d97706; }
-    .berat { background: #dc2626; }
     .filter { margin: 12px 0; display: flex; gap: 8px; }
-    input, select { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
+    input, select, button { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
+    button { background: #0f766e; color: white; border: none; cursor: pointer; }
+    .error { color: #b91c1c; font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
   </style>
 </head>
 <body>
-  <h1>Dashboard Kawasan Kumuh</h1>
-  <p>Contoh tampilan awal untuk data 600+ lokasi.</p>
-
-  <section class="cards">
-    <article class="card"><strong>Total Kawasan</strong><div>600 (target)</div></article>
-    <article class="card"><strong>Kecamatan Tercakup</strong><div>25</div></article>
-    <article class="card"><strong>Status Proses/Selesai</strong><div>340</div></article>
+  <section id="loginSection" class="login-wrap">
+    <div class="panel">
+      <h2>Login Perkim</h2>
+      <p>Masuk untuk melihat dashboard kawasan kumuh.</p>
+      <form id="loginForm">
+        <label>Username</label>
+        <input id="username" type="text" placeholder="Masukkan username" required />
+        <label>Password</label>
+        <input id="password" type="password" placeholder="Masukkan password" required />
+        <div style="margin-top:10px;"><button type="submit">Login</button></div>
+        <div id="loginError" class="error"></div>
+      </form>
+    </div>
   </section>
 
-  <div class="filter">
-    <input type="text" placeholder="Cari nama kawasan..." />
-    <select>
-      <option>Semua Kecamatan</option>
-      <option>Kec. Pesisir</option>
-      <option>Kec. Tengah</option>
-      <option>Kec. Timur</option>
-    </select>
-  </div>
+  <main id="appSection" class="hidden">
+    <div class="topbar">
+      <div>
+        <h1>Dashboard Kawasan Kumuh</h1>
+        <p>Contoh tampilan awal untuk data 600+ lokasi.</p>
+      </div>
+      <button id="logoutBtn">Logout</button>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>RT/RW</th>
-        <th>Kampung</th>
-        <th>Desa</th>
-        <th>Kecamatan</th>
-        <th>Luas (Ha)</th>
-        <th>Kewenangan</th>
-        <th>Bobot</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>RT001-RW001</td>
-        <td>KP. PANGARADAN</td>
-        <td>ANYAR</td>
-        <td>ANYAR</td>
-        <td>0.713</td>
-        <td>KAB/KOTA</td>
-        <td>25</td>
-      </tr>
-      <tr>
-        <td>RT002-RW001</td>
-        <td>KP. PANGARADAN</td>
-        <td>ANYAR</td>
-        <td>ANYAR</td>
-        <td>0.699</td>
-        <td>KAB/KOTA</td>
-        <td>23</td>
-      </tr>
-    </tbody>
-  </table>
+    <section class="cards">
+      <article class="card"><strong>Total Kawasan</strong><div>600 (target)</div></article>
+      <article class="card"><strong>Kecamatan Tercakup</strong><div>25</div></article>
+      <article class="card"><strong>Status Proses/Selesai</strong><div>340</div></article>
+    </section>
+
+    <div class="filter">
+      <input type="text" placeholder="Cari nama kawasan..." />
+      <select>
+        <option>Semua Kecamatan</option>
+        <option>Anyar</option>
+        <option>Bandung</option>
+        <option>Baros</option>
+      </select>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>RT/RW</th>
+          <th>Kampung</th>
+          <th>Desa</th>
+          <th>Kecamatan</th>
+          <th>Luas (Ha)</th>
+          <th>Kewenangan</th>
+          <th>Bobot</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>RT001-RW001</td>
+          <td>KP. PANGARADAN</td>
+          <td>ANYAR</td>
+          <td>ANYAR</td>
+          <td>0.713</td>
+          <td>KAB/KOTA</td>
+          <td>25</td>
+        </tr>
+        <tr>
+          <td>RT002-RW001</td>
+          <td>KP. PANGARADAN</td>
+          <td>ANYAR</td>
+          <td>ANYAR</td>
+          <td>0.699</td>
+          <td>KAB/KOTA</td>
+          <td>23</td>
+        </tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    const VALID_USERNAME = 'perkim';
+    const VALID_PASSWORD = '1234';
+
+    const loginSection = document.getElementById('loginSection');
+    const appSection = document.getElementById('appSection');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    function showApp() {
+      loginSection.classList.add('hidden');
+      appSection.classList.remove('hidden');
+    }
+
+    function showLogin() {
+      appSection.classList.add('hidden');
+      loginSection.classList.remove('hidden');
+    }
+
+    if (sessionStorage.getItem('perkim_logged_in') === '1') {
+      showApp();
+    }
+
+    loginForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+        sessionStorage.setItem('perkim_logged_in', '1');
+        loginError.textContent = '';
+        showApp();
+      } else {
+        loginError.textContent = 'Username atau password salah.';
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('perkim_logged_in');
+      showLogin();
+    });
+  </script>
 </body>
 </html>

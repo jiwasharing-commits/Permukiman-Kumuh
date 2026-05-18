@@ -18,3 +18,9 @@ Langkah berikutnya:
 ## Data Kewenangan (Input Lapangan)
 - `data/lokasi_kewenangan_kabupaten.csv` berisi dataset awal dari format yang Anda kirim (RT/RW, Kampung, Desa, Kecamatan, Luas, Kewenangan, Bobot Kumuh).
 - `docs/format-data-kewenangan.md` berisi standar format dan catatan pembersihan data.
+
+
+## Login Demo
+- Username: `perkim`
+- Password: `1234`
+- Catatan: ini login frontend sederhana (static demo), belum terhubung ke backend autentikasi.
