@@ -13,3 +13,8 @@ Langkah berikutnya:
 2. Tambahkan fitur import CSV/XLSX.
 3. Tambahkan pagination + filter server-side untuk 600+ data.
 4. Integrasikan peta interaktif (Leaflet/OpenStreetMap).
+
+
+## Data Kewenangan (Input Lapangan)
+- `data/lokasi_kewenangan_kabupaten.csv` berisi dataset awal dari format yang Anda kirim (RT/RW, Kampung, Desa, Kecamatan, Luas, Kewenangan, Bobot Kumuh).
+- `docs/format-data-kewenangan.md` berisi standar format dan catatan pembersihan data.
