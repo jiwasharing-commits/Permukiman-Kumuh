@@ -1,0 +1,6 @@
+kode_kawasan,nama_kawasan,alamat,kelurahan,kecamatan,kabupaten_kota,luas_ha,tingkat_kumuh,jumlah_bangunan,jumlah_kk,latitude,longitude,tahun_penetapan,status_penanganan,keterangan
+KKH-001,Kawasan Sungai Baru Jl. Melati,"Jl. Melati RT 01/RW 02",Sungai Baru,Kec. Pesisir,Kota Contoh,12.50,Sedang,320,287,-6.201234,106.801234,2021,Proses,Prioritas drainase dan sanitasi
+KKH-002,Kawasan Pasar Lama,"Jl. Pasar Lama Blok C",Pasar Lama,Kec. Tengah,Kota Contoh,8.20,Ringan,140,121,-6.198765,106.812345,2020,Belum,Perlu penataan akses jalan
+KKH-003,Kawasan Bukit Timur,"Gg. Anggrek RT 03/RW 01",Bukit Timur,Kec. Timur,Kota Contoh,25.75,Berat,540,498,-6.187654,106.823456,2019,Proses,Fokus pada rumah tidak layak huni
+KKH-004,Kawasan Pelabuhan Selatan,"Jl. Dermaga No. 8",Pelabuhan Selatan,Kec. Barat,Kota Contoh,10.10,Sedang,260,230,-6.176543,106.834567,2022,Selesai,Program penanganan tahap 1 selesai
+KKH-005,Kawasan Cempaka,"Jl. Cempaka Raya RT 07",Cempaka,Kec. Utara,Kota Contoh,6.90,Ringan,110,98,-6.165432,106.845678,2023,Belum,Perlu verifikasi data lapangan
