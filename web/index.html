@@ -11,15 +11,17 @@
     .panel { background: white; padding: 18px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
     .cards { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
     .card { background: white; padding: 14px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
-    h1 { margin-bottom: 4px; }
     table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
     th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 10px; font-size: 14px; }
     th { background: #0f766e; color: white; }
-    .filter { margin: 12px 0; display: flex; gap: 8px; }
+    .filter { margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap; }
     input, select, button { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
     button { background: #0f766e; color: white; border: none; cursor: pointer; }
     .error { color: #b91c1c; font-size: 13px; margin-top: 8px; min-height: 18px; }
     .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .meta { display:flex; justify-content:space-between; align-items:center; margin:10px 0; font-size: 13px; color:#4b5563; }
+    .pagination { display:flex; gap:6px; align-items:center; }
+    .pagination button[disabled] { background:#9ca3af; cursor:not-allowed; }
   </style>
 </head>
 <body>
@@ -42,104 +44,162 @@
     <div class="topbar">
       <div>
         <h1>Dashboard Kawasan Kumuh</h1>
-        <p>Contoh tampilan awal untuk data 600+ lokasi.</p>
+        <p>Data dimuat dari CSV: <code>data/lokasi_kewenangan_kabupaten.csv</code></p>
       </div>
       <button id="logoutBtn">Logout</button>
     </div>
 
     <section class="cards">
-      <article class="card"><strong>Total Kawasan</strong><div>600 (target)</div></article>
-      <article class="card"><strong>Kecamatan Tercakup</strong><div>25</div></article>
-      <article class="card"><strong>Status Proses/Selesai</strong><div>340</div></article>
+      <article class="card"><strong>Total Data</strong><div id="totalData">0</div></article>
+      <article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article>
+      <article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article>
     </section>
 
     <div class="filter">
-      <input type="text" placeholder="Cari nama kawasan..." />
-      <select>
-        <option>Semua Kecamatan</option>
-        <option>Anyar</option>
-        <option>Bandung</option>
-        <option>Baros</option>
+      <input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa..." />
+      <select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select>
+      <select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select>
+      <select id="pageSizeSelect">
+        <option value="10">10 / halaman</option>
+        <option value="25" selected>25 / halaman</option>
+        <option value="50">50 / halaman</option>
       </select>
+    </div>
+
+    <div class="meta">
+      <span id="resultInfo">Menampilkan 0 data</span>
+      <div class="pagination">
+        <button id="prevBtn">Sebelumnya</button>
+        <span id="pageInfo">Hal 1/1</span>
+        <button id="nextBtn">Berikutnya</button>
+      </div>
     </div>
 
     <table>
       <thead>
         <tr>
-          <th>RT/RW</th>
-          <th>Kampung</th>
-          <th>Desa</th>
-          <th>Kecamatan</th>
-          <th>Luas (Ha)</th>
-          <th>Kewenangan</th>
-          <th>Bobot</th>
+          <th>RT/RW</th><th>Kampung</th><th>Desa</th><th>Kecamatan</th><th>Luas (Ha)</th><th>Kewenangan</th><th>Bobot</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>RT001-RW001</td>
-          <td>KP. PANGARADAN</td>
-          <td>ANYAR</td>
-          <td>ANYAR</td>
-          <td>0.713</td>
-          <td>KAB/KOTA</td>
-          <td>25</td>
-        </tr>
-        <tr>
-          <td>RT002-RW001</td>
-          <td>KP. PANGARADAN</td>
-          <td>ANYAR</td>
-          <td>ANYAR</td>
-          <td>0.699</td>
-          <td>KAB/KOTA</td>
-          <td>23</td>
-        </tr>
-      </tbody>
+      <tbody id="tableBody"></tbody>
     </table>
   </main>
 
   <script>
     const VALID_USERNAME = 'perkim';
     const VALID_PASSWORD = '1234';
+    const CSV_PATH = '../data/lokasi_kewenangan_kabupaten.csv';
 
-    const loginSection = document.getElementById('loginSection');
-    const appSection = document.getElementById('appSection');
-    const loginForm = document.getElementById('loginForm');
-    const loginError = document.getElementById('loginError');
-    const logoutBtn = document.getElementById('logoutBtn');
+    const state = { rawData: [], filtered: [], page: 1, pageSize: 25 };
 
-    function showApp() {
-      loginSection.classList.add('hidden');
-      appSection.classList.remove('hidden');
+    const el = {
+      loginSection: document.getElementById('loginSection'), appSection: document.getElementById('appSection'),
+      loginForm: document.getElementById('loginForm'), loginError: document.getElementById('loginError'), logoutBtn: document.getElementById('logoutBtn'),
+      searchInput: document.getElementById('searchInput'), kecamatanFilter: document.getElementById('kecamatanFilter'), kewenanganFilter: document.getElementById('kewenanganFilter'),
+      pageSizeSelect: document.getElementById('pageSizeSelect'), tableBody: document.getElementById('tableBody'),
+      resultInfo: document.getElementById('resultInfo'), pageInfo: document.getElementById('pageInfo'), prevBtn: document.getElementById('prevBtn'), nextBtn: document.getElementById('nextBtn'),
+      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), avgBobot: document.getElementById('avgBobot')
+    };
+
+    function parseCsv(csvText) {
+      const lines = csvText.trim().split(/\r?\n/);
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const cols = line.split(',');
+        const row = {};
+        headers.forEach((h, i) => row[h] = (cols[i] || '').trim());
+        return row;
+      });
     }
 
-    function showLogin() {
-      appSection.classList.add('hidden');
-      loginSection.classList.remove('hidden');
+    function showApp() { el.loginSection.classList.add('hidden'); el.appSection.classList.remove('hidden'); }
+    function showLogin() { el.appSection.classList.add('hidden'); el.loginSection.classList.remove('hidden'); }
+
+    function renderStats() {
+      const data = state.rawData;
+      el.totalData.textContent = data.length;
+      el.totalKecamatan.textContent = new Set(data.map(d => d.kecamatan)).size;
+      const avg = data.length ? data.reduce((a, b) => a + Number(b.bobot_kumuh || 0), 0) / data.length : 0;
+      el.avgBobot.textContent = avg.toFixed(1);
     }
 
-    if (sessionStorage.getItem('perkim_logged_in') === '1') {
-      showApp();
+    function renderFilters() {
+      const kec = [...new Set(state.rawData.map(d => d.kecamatan))].sort();
+      const kew = [...new Set(state.rawData.map(d => d.kewenangan))].sort();
+      el.kecamatanFilter.innerHTML = '<option value="">Semua Kecamatan</option>' + kec.map(v => `<option value="${v}">${v}</option>`).join('');
+      el.kewenanganFilter.innerHTML = '<option value="">Semua Kewenangan</option>' + kew.map(v => `<option value="${v}">${v}</option>`).join('');
     }
 
-    loginForm.addEventListener('submit', (event) => {
+    function applyFilters() {
+      const q = el.searchInput.value.toLowerCase().trim();
+      const kec = el.kecamatanFilter.value;
+      const kew = el.kewenanganFilter.value;
+      state.filtered = state.rawData.filter(d => {
+        const matchQ = !q || `${d.rt_rw} ${d.kampung} ${d.desa} ${d.kecamatan}`.toLowerCase().includes(q);
+        const matchKec = !kec || d.kecamatan === kec;
+        const matchKew = !kew || d.kewenangan === kew;
+        return matchQ && matchKec && matchKew;
+      });
+      state.page = 1;
+      renderTable();
+    }
+
+    function renderTable() {
+      const total = state.filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+      const start = (state.page - 1) * state.pageSize;
+      const end = Math.min(start + state.pageSize, total);
+      const rows = state.filtered.slice(start, end);
+
+      el.tableBody.innerHTML = rows.map(d => `<tr>
+        <td>${d.rt_rw}</td><td>${d.kampung}</td><td>${d.desa}</td><td>${d.kecamatan}</td><td>${d.luas_ha}</td><td>${d.kewenangan}</td><td>${d.bobot_kumuh}</td>
+      </tr>`).join('') || '<tr><td colspan="7">Data tidak ditemukan.</td></tr>';
+
+      el.resultInfo.textContent = `Menampilkan ${total === 0 ? 0 : start + 1}-${end} dari ${total} data`;
+      el.pageInfo.textContent = `Hal ${state.page}/${totalPages}`;
+      el.prevBtn.disabled = state.page <= 1;
+      el.nextBtn.disabled = state.page >= totalPages;
+    }
+
+    async function loadData() {
+      try {
+        const res = await fetch(CSV_PATH);
+        if (!res.ok) throw new Error('Gagal memuat CSV');
+        const text = await res.text();
+        state.rawData = parseCsv(text);
+        state.filtered = [...state.rawData];
+        renderStats();
+        renderFilters();
+        renderTable();
+      } catch (err) {
+        el.tableBody.innerHTML = '<tr><td colspan="7">Gagal memuat data CSV. Jalankan via local server.</td></tr>';
+      }
+    }
+
+    if (sessionStorage.getItem('perkim_logged_in') === '1') { showApp(); loadData(); }
+
+    el.loginForm.addEventListener('submit', (event) => {
       event.preventDefault();
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
-
       if (username === VALID_USERNAME && password === VALID_PASSWORD) {
         sessionStorage.setItem('perkim_logged_in', '1');
-        loginError.textContent = '';
+        el.loginError.textContent = '';
         showApp();
+        loadData();
       } else {
-        loginError.textContent = 'Username atau password salah.';
+        el.loginError.textContent = 'Username atau password salah.';
       }
     });
 
-    logoutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem('perkim_logged_in');
-      showLogin();
-    });
+    el.logoutBtn.addEventListener('click', () => { sessionStorage.removeItem('perkim_logged_in'); showLogin(); });
+    el.searchInput.addEventListener('input', applyFilters);
+    el.kecamatanFilter.addEventListener('change', applyFilters);
+    el.kewenanganFilter.addEventListener('change', applyFilters);
+    el.pageSizeSelect.addEventListener('change', () => { state.pageSize = Number(el.pageSizeSelect.value); state.page = 1; renderTable(); });
+    el.prevBtn.addEventListener('click', () => { if (state.page > 1) { state.page -= 1; renderTable(); } });
+    el.nextBtn.addEventListener('click', () => { const max = Math.max(1, Math.ceil(state.filtered.length / state.pageSize)); if (state.page < max) { state.page += 1; renderTable(); } });
   </script>
 </body>
 </html>
