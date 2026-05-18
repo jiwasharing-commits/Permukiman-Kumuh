@@ -20,13 +20,9 @@ Langkah berikutnya:
 - `docs/format-data-kewenangan.md` berisi standar format dan catatan pembersihan data.
 
 
-## Login Demo
-- Username: `perkim`
-- Password: `1234`
-- Catatan: ini login frontend sederhana (static demo), belum terhubung ke backend autentikasi.
-
-
 ## Menjalankan Web Demo
 - Karena browser biasanya memblokir `fetch` file lokal, jalankan web via local server:
 - `cd web && python3 -m http.server 8000`
 - Buka: `http://localhost:8000`
+
+- Tabel langsung tampil saat halaman dibuka (tanpa login), dengan fitur pencarian, filter, pagination, dan reload data.
