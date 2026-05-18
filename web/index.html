@@ -64,7 +64,7 @@
   </div>
 
   <script>
-    const CSV_PATHS = ['../data/lokasi_kewenangan_kabupaten.csv'];
+    const CSV_PATHS = ['../data/sumber_data_baru.csv'];
     const state = { rawData: [], filtered: [], page: 1, pageSize: 25 };
 
     const el = {
@@ -77,11 +77,25 @@
     function parseCsv(csvText) {
       const lines = csvText.trim().split(/\r?\n/);
       const headers = lines[0].split(',').map(h => h.trim());
-      return lines.slice(1).map(line => {
+      const idx = Object.fromEntries(headers.map((h, i) => [h, i]));
+      const get = (cols, keys) => {
+        for (const key of keys) {
+          if (idx[key] !== undefined) return (cols[idx[key]] || '').trim();
+        }
+        return '';
+      };
+
+      return lines.slice(1).filter(Boolean).map(line => {
         const cols = line.split(',');
-        const row = {};
-        headers.forEach((h, i) => row[h] = (cols[i] || '').trim());
-        return row;
+        return {
+          rt_rw: get(cols, ['rt_rw', 'RT/RW']),
+          kampung: get(cols, ['kampung', 'KAMPUNG']),
+          desa: get(cols, ['desa', 'DESA']),
+          kecamatan: get(cols, ['kecamatan', 'KECAMATAN']),
+          luas_ha: get(cols, ['luas_ha', 'LUAS (Ha)']),
+          kewenangan: get(cols, ['kewenangan', 'KEWENANGAN']),
+          bobot_kumuh: get(cols, ['bobot_kumuh', 'Bobot Kumuh'])
+        };
       });
     }
 
