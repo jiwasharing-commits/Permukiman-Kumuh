@@ -48,6 +48,8 @@
     .pagination { display:flex; gap:6px; align-items:center; }
     .pagination button[disabled] { background:#9ca3af; cursor:not-allowed; }
     .pagination.is-hidden { display: none; }
+    .summary-toggle { margin-bottom: 18px; }
+    .is-hidden { display: none; }
     .table-wrap { max-height: 60vh; overflow: auto; border-radius: 12px; border: 1px solid #e5e7eb; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .center { text-align: center; }
@@ -57,7 +59,8 @@
     }
     @media (max-width: 640px) {
       .container { padding: 18px 12px 28px; }
-      .cards { grid-template-columns: 1fr; }
+      .cards { display: flex; grid-template-columns: none; overflow-x: auto; padding-bottom: 8px; }
+      .card { flex: 0 0 170px; }
       .hero h1 { font-size: 22px; }
       input, select, button { width: 100%; }
       input { min-width: 100%; box-sizing: border-box; }
@@ -68,7 +71,6 @@
   <main class="container">
     <header class="hero">
       <h1>Dashboard Data Kawasan Permukiman Kumuh</h1>
-      <p>Visualisasi data lokasi, luas, bobot, dan kewenangan penanganan kawasan permukiman kumuh berbasis CSV.</p>
       <div class="source-info">
         <span>Sumber data: <strong id="sourcePathLabel">data/sumber_data_baru.csv</strong></span>
         <span id="lastUpdatedLabel">Data terakhir diperbarui: -</span>
@@ -76,19 +78,23 @@
     </header>
 
     <section class="cards" aria-label="Ringkasan statistik">
-      <article class="card"><strong>Total Lokasi</strong><div id="totalData">0</div></article>
+      <article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article>
       <article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article>
       <article class="card"><strong>Total Desa</strong><div id="totalDesa">0</div></article>
       <article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article>
       <article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article>
     </section>
 
-    <section class="panel" aria-label="Ringkasan narasi otomatis">
+    <div class="summary-toggle">
+      <button id="summaryToggleBtn" class="secondary-btn">Sembunyikan Ringkasan & Top 10</button>
+    </div>
+
+    <section id="narrativePanel" class="panel" aria-label="Ringkasan narasi otomatis">
       <h2>Ringkasan Narasi Otomatis</h2>
       <p id="narrativeText" class="narrative">Memuat data...</p>
     </section>
 
-    <section class="panel" aria-label="Top 10 kecamatan prioritas">
+    <section id="top10Panel" class="panel" aria-label="Top 10 kecamatan prioritas">
       <h2>Top 10 Kecamatan Prioritas</h2>
       <div class="analysis-grid">
         <article class="analysis-card">
@@ -166,9 +172,9 @@
   <script>
     const CSV_PATHS = ['data/sumber_data_baru.csv'];
     const DISPLAY_CSV_PATH = 'data/sumber_data_baru.csv';
-    const state = { rawData: [], filtered: [], page: 1, pageSize: 25, sortKey: '', sortDir: 'asc' };
+    const state = { rawData: [], filtered: [], page: 1, pageSize: 25, sortKey: '', sortDir: 'asc', summaryVisible: true };
     const integerFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
-    const decimalFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 });
+    const decimalFormat = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const totalLuasFormat = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const avgBobotFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
 
@@ -179,8 +185,8 @@
       pageInfo: document.getElementById('pageInfo'), pageInfoBottom: document.getElementById('pageInfoBottom'), paginationTop: document.getElementById('paginationTop'), paginationBottom: document.getElementById('paginationBottom'),
       prevBtn: document.getElementById('prevBtn'), prevBtnBottom: document.getElementById('prevBtnBottom'), nextBtn: document.getElementById('nextBtn'), nextBtnBottom: document.getElementById('nextBtnBottom'),
       totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), totalDesa: document.getElementById('totalDesa'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas'),
-      sourcePathLabel: document.getElementById('sourcePathLabel'), lastUpdatedLabel: document.getElementById('lastUpdatedLabel'), narrativeText: document.getElementById('narrativeText'),
-      topLuasList: document.getElementById('topLuasList'), topLokasiList: document.getElementById('topLokasiList'), topBobotList: document.getElementById('topBobotList')
+      sourcePathLabel: document.getElementById('sourcePathLabel'), lastUpdatedLabel: document.getElementById('lastUpdatedLabel'), narrativeText: document.getElementById('narrativeText'), summaryToggleBtn: document.getElementById('summaryToggleBtn'),
+      narrativePanel: document.getElementById('narrativePanel'), top10Panel: document.getElementById('top10Panel'), topLuasList: document.getElementById('topLuasList'), topLokasiList: document.getElementById('topLokasiList'), topBobotList: document.getElementById('topBobotList')
     };
 
     function parseNumber(value) {
@@ -372,6 +378,13 @@
       renderTable();
     }
 
+    function toggleSummaryPanels() {
+      state.summaryVisible = !state.summaryVisible;
+      el.narrativePanel.classList.toggle('is-hidden', !state.summaryVisible);
+      el.top10Panel.classList.toggle('is-hidden', !state.summaryVisible);
+      el.summaryToggleBtn.textContent = state.summaryVisible ? 'Sembunyikan Ringkasan & Top 10' : 'Tampilkan Ringkasan & Top 10';
+    }
+
     function goToPage(direction) {
       const totalPages = state.pageSize === 'all' ? 1 : Math.max(1, Math.ceil(state.filtered.length / getPageSize()));
       state.page = Math.min(Math.max(1, state.page + direction), totalPages);
@@ -495,6 +508,7 @@
     el.nextBtn.addEventListener('click', () => goToPage(1));
     el.nextBtnBottom.addEventListener('click', () => goToPage(1));
     el.resetFilterBtn.addEventListener('click', resetFilters);
+    el.summaryToggleBtn.addEventListener('click', toggleSummaryPanels);
     el.reloadBtn.addEventListener('click', loadData);
     el.exportExcelBtn.addEventListener('click', exportExcel);
     el.exportPdfBtn.addEventListener('click', exportPdf);
