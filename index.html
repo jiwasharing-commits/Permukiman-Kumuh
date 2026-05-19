@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Data Kawasan Permukiman Kumuh</title>
+  <title>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</title>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
@@ -16,7 +16,7 @@
     .hero p { margin: 0; max-width: 860px; color: #d9fffb; line-height: 1.6; }
     .source-info { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #ecfeff; }
     .source-info span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 6px 10px; }
-    .cards { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .cards { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
     .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .08); border: 1px solid #e5e7eb; }
     .card strong { display: block; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
     .card div { font-size: 23px; font-weight: 700; color: #0f766e; }
@@ -70,7 +70,7 @@
 <body>
   <main class="container">
     <header class="hero">
-      <h1>Dashboard Data Kawasan Permukiman Kumuh</h1>
+      <h1>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</h1>
       <div class="source-info">
         <span>Sumber data: <strong id="sourcePathLabel">data/sumber_data_baru.csv</strong></span>
         <span id="lastUpdatedLabel">Data terakhir diperbarui: -</span>
@@ -81,6 +81,7 @@
       <article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article>
       <article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article>
       <article class="card"><strong>Total Desa</strong><div id="totalDesa">0</div></article>
+      <article class="card"><strong>Total Kampung</strong><div id="totalKampung">0</div></article>
       <article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article>
       <article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article>
     </section>
@@ -90,12 +91,21 @@
     </div>
 
     <section id="narrativePanel" class="panel" aria-label="Ringkasan narasi otomatis">
-      <h2>Ringkasan Narasi Otomatis</h2>
+      <div class="meta">
+        <h2>Ringkasan Narasi Otomatis</h2>
+        <button id="copySummaryBtn" class="secondary-btn">Copy Ringkasan</button>
+      </div>
       <p id="narrativeText" class="narrative">Memuat data...</p>
     </section>
 
     <section id="top10Panel" class="panel" aria-label="Top 10 kecamatan prioritas">
-      <h2>Top 10 Kecamatan Prioritas</h2>
+      <div class="meta">
+        <h2>Top 10 Kecamatan Prioritas</h2>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="copyTop10Btn" class="secondary-btn">Copy Top 10</button>
+          <button id="copyAllBtn" class="secondary-btn">Copy Semua</button>
+        </div>
+      </div>
       <div class="analysis-grid">
         <article class="analysis-card">
           <h3>Top 10 Kecamatan Berdasarkan Total Luas Kumuh</h3>
@@ -184,9 +194,9 @@
       exportExcelBtn: document.getElementById('exportExcelBtn'), exportPdfBtn: document.getElementById('exportPdfBtn'), resultInfo: document.getElementById('resultInfo'), resultInfoBottom: document.getElementById('resultInfoBottom'),
       pageInfo: document.getElementById('pageInfo'), pageInfoBottom: document.getElementById('pageInfoBottom'), paginationTop: document.getElementById('paginationTop'), paginationBottom: document.getElementById('paginationBottom'),
       prevBtn: document.getElementById('prevBtn'), prevBtnBottom: document.getElementById('prevBtnBottom'), nextBtn: document.getElementById('nextBtn'), nextBtnBottom: document.getElementById('nextBtnBottom'),
-      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), totalDesa: document.getElementById('totalDesa'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas'),
+      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), totalDesa: document.getElementById('totalDesa'), totalKampung: document.getElementById('totalKampung'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas'),
       sourcePathLabel: document.getElementById('sourcePathLabel'), lastUpdatedLabel: document.getElementById('lastUpdatedLabel'), narrativeText: document.getElementById('narrativeText'), summaryToggleBtn: document.getElementById('summaryToggleBtn'),
-      narrativePanel: document.getElementById('narrativePanel'), top10Panel: document.getElementById('top10Panel'), topLuasList: document.getElementById('topLuasList'), topLokasiList: document.getElementById('topLokasiList'), topBobotList: document.getElementById('topBobotList')
+      narrativePanel: document.getElementById('narrativePanel'), top10Panel: document.getElementById('top10Panel'), topLuasList: document.getElementById('topLuasList'), topLokasiList: document.getElementById('topLokasiList'), topBobotList: document.getElementById('topBobotList'), copySummaryBtn: document.getElementById('copySummaryBtn'), copyTop10Btn: document.getElementById('copyTop10Btn'), copyAllBtn: document.getElementById('copyAllBtn')
     };
 
     function parseNumber(value) {
@@ -237,6 +247,7 @@
         lokasi: data.length,
         kecamatan: new Set(data.map(row => row.kecamatan).filter(Boolean)).size,
         desa: new Set(data.map(row => row.desa).filter(Boolean)).size,
+        kampung: new Set(data.map(row => row.kampung).filter(Boolean)).size,
         avgBobot: data.length ? totalBobot / data.length : 0,
         totalLuas
       };
@@ -247,6 +258,7 @@
       el.totalData.textContent = integerFormat.format(summary.lokasi);
       el.totalKecamatan.textContent = integerFormat.format(summary.kecamatan);
       el.totalDesa.textContent = integerFormat.format(summary.desa);
+      el.totalKampung.textContent = integerFormat.format(summary.kampung);
       el.avgBobot.textContent = summary.lokasi ? avgBobotFormat.format(summary.avgBobot) : '0';
       el.sumLuas.textContent = summary.lokasi ? `${totalLuasFormat.format(summary.totalLuas)} Ha` : '0';
     }
@@ -385,6 +397,38 @@
       el.summaryToggleBtn.textContent = state.summaryVisible ? 'Sembunyikan Ringkasan & Top 10' : 'Tampilkan Ringkasan & Top 10';
     }
 
+
+    async function copyTextWithFeedback(button, text) {
+      if (!text.trim()) return;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (_) {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        temp.remove();
+      }
+      const original = button.textContent;
+      button.textContent = 'Tersalin';
+      setTimeout(() => { button.textContent = original; }, 1200);
+    }
+
+    function buildTop10Text() {
+      const pick = list => [...list.querySelectorAll('li')].map(li => li.textContent.trim()).join('\n');
+      return [
+        'Top 10 Kecamatan Berdasarkan Total Luas Kumuh',
+        pick(el.topLuasList),
+        '',
+        'Top 10 Kecamatan Berdasarkan Jumlah Lokasi',
+        pick(el.topLokasiList),
+        '',
+        'Top 10 Kecamatan Berdasarkan Rata-rata Bobot',
+        pick(el.topBobotList)
+      ].join('\n');
+    }
+
     function goToPage(direction) {
       const totalPages = state.pageSize === 'all' ? 1 : Math.max(1, Math.ceil(state.filtered.length / getPageSize()));
       state.page = Math.min(Math.max(1, state.page + direction), totalPages);
@@ -439,7 +483,7 @@
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const summary = getSummary(state.filtered);
       doc.setFontSize(14);
-      doc.text('Dashboard Data Kawasan Permukiman Kumuh', 14, 14);
+      doc.text('Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang', 14, 14);
       doc.setFontSize(10);
       doc.text(`Total Lokasi: ${integerFormat.format(summary.lokasi)}`, 14, 24);
       doc.text(`Total Kecamatan: ${integerFormat.format(summary.kecamatan)}`, 70, 24);
@@ -512,6 +556,9 @@
     el.reloadBtn.addEventListener('click', loadData);
     el.exportExcelBtn.addEventListener('click', exportExcel);
     el.exportPdfBtn.addEventListener('click', exportPdf);
+    el.copySummaryBtn.addEventListener('click', () => copyTextWithFeedback(el.copySummaryBtn, el.narrativeText.textContent));
+    el.copyTop10Btn.addEventListener('click', () => copyTextWithFeedback(el.copyTop10Btn, buildTop10Text()));
+    el.copyAllBtn.addEventListener('click', () => copyTextWithFeedback(el.copyAllBtn, `${el.narrativeText.textContent}\n\n${buildTop10Text()}`));
 
     loadData();
   </script>
