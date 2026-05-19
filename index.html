@@ -148,13 +148,13 @@
     }
 
     function renderStats() {
-      const data = state.rawData;
+      const data = state.filtered;
       el.totalData.textContent = numberFormat.format(data.length);
       el.totalKecamatan.textContent = numberFormat.format(new Set(data.map(d => d.kecamatan)).size);
       const avg = data.length ? data.reduce((a, b) => a + parseNumber(b.bobot_kumuh), 0) / data.length : 0;
       const sum = data.reduce((a, b) => a + parseNumber(b.luas_ha), 0);
-      el.avgBobot.textContent = avg.toFixed(1);
-      el.sumLuas.textContent = totalLuasFormat.format(sum);
+      el.avgBobot.textContent = data.length ? avg.toFixed(1) : '0';
+      el.sumLuas.textContent = data.length ? totalLuasFormat.format(sum) : '0';
     }
 
     function renderFilters() {
@@ -177,6 +177,7 @@
     }
 
     function renderTable() {
+      renderStats();
       const total = state.filtered.length;
       const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
       if (state.page > totalPages) state.page = totalPages;
@@ -208,11 +209,13 @@
         el.tableBody.innerHTML = '<tr><td colspan="7">Gagal memuat CSV. Jalankan: cd web && python3 -m http.server 8000</td></tr>';
         return;
       }
+      const selectedKecamatan = el.kecamatanFilter.value;
+      const selectedKewenangan = el.kewenanganFilter.value;
       state.rawData = parseCsv(loaded);
-      state.filtered = [...state.rawData];
-      renderStats();
       renderFilters();
-      renderTable();
+      el.kecamatanFilter.value = [...el.kecamatanFilter.options].some(option => option.value === selectedKecamatan) ? selectedKecamatan : '';
+      el.kewenanganFilter.value = [...el.kewenanganFilter.options].some(option => option.value === selectedKewenangan) ? selectedKewenangan : '';
+      applyFilters();
     }
 
     el.searchInput.addEventListener('input', applyFilters);
