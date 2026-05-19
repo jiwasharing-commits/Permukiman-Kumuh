@@ -321,6 +321,7 @@
     }
 
     function renderTable() {
+      renderStats();
       const total = state.filtered.length;
       const showAll = state.pageSize === 'all';
       const pageSize = getPageSize();
