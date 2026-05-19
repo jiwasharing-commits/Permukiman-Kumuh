@@ -4,44 +4,63 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard Data Kawasan Permukiman Kumuh</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: Arial, sans-serif; margin: 0; background: #f3f6fb; color: #1f2937; }
-    .container { max-width: 1180px; margin: 0 auto; padding: 28px 24px 36px; }
+    .container { max-width: 1240px; margin: 0 auto; padding: 28px 24px 36px; }
     .hero { background: linear-gradient(135deg, #0f766e, #115e59); color: white; padding: 24px; border-radius: 16px; box-shadow: 0 10px 28px rgba(15, 118, 110, .18); margin-bottom: 18px; }
     .hero h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; }
-    .hero p { margin: 0; max-width: 780px; color: #d9fffb; line-height: 1.6; }
-    .cards { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .hero p { margin: 0; max-width: 860px; color: #d9fffb; line-height: 1.6; }
+    .source-info { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #ecfeff; }
+    .source-info span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 6px 10px; }
+    .cards { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
     .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .08); border: 1px solid #e5e7eb; }
-    .card strong { display: block; color: #475569; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
-    .card div { font-size: 24px; font-weight: 700; color: #0f766e; }
-    .panel { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .06); }
+    .card strong { display: block; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .card div { font-size: 23px; font-weight: 700; color: #0f766e; }
+    .panel { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .06); margin-bottom: 18px; }
+    .panel h2 { margin: 0 0 10px; font-size: 18px; color: #0f172a; }
+    .narrative { margin: 0; color: #334155; line-height: 1.6; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
+    .analysis-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; background: #f8fafc; }
+    .analysis-card h3 { margin: 0 0 10px; font-size: 14px; color: #0f766e; }
+    .top-list { margin: 0; padding-left: 22px; color: #334155; font-size: 13px; line-height: 1.7; }
+    .top-list li::marker { color: #0f766e; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; background: white; }
     th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 8px 10px; font-size: 13px; line-height: 1.35; }
-    th { background: #0f766e; color: white; position: sticky; top: 0; z-index: 1; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+    th { background: #0f766e; color: white; position: sticky; top: 0; z-index: 1; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: #115e59; }
     tbody tr:nth-child(even) { background: #f8fafc; }
     tbody tr:hover { background: #ecfdf5; }
     .filter { margin: 0 0 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     input, select, button { padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 9px; font-size: 13px; }
-    input { min-width: 260px; }
+    input { min-width: 280px; }
     button { background: #0f766e; color: white; border: none; cursor: pointer; font-weight: 700; }
     button:hover:not([disabled]) { background: #115e59; }
     .secondary-btn { background: #e2e8f0; color: #334155; }
     .secondary-btn:hover:not([disabled]) { background: #cbd5e1; }
+    .export-btn { background: #1d4ed8; }
+    .export-btn:hover:not([disabled]) { background: #1e40af; }
     .meta { display:flex; justify-content:space-between; align-items:center; gap: 12px; margin:10px 0; font-size: 13px; color:#4b5563; flex-wrap: wrap; }
     .pagination { display:flex; gap:6px; align-items:center; }
     .pagination button[disabled] { background:#9ca3af; cursor:not-allowed; }
+    .pagination.is-hidden { display: none; }
     .table-wrap { max-height: 60vh; overflow: auto; border-radius: 12px; border: 1px solid #e5e7eb; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
     .center { text-align: center; }
-    @media (max-width: 820px) {
+    @media (max-width: 960px) {
       .cards { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
-      input { min-width: 100%; }
+      .analysis-grid { grid-template-columns: 1fr; }
     }
-    @media (max-width: 520px) {
+    @media (max-width: 640px) {
       .container { padding: 18px 12px 28px; }
       .cards { grid-template-columns: 1fr; }
       .hero h1 { font-size: 22px; }
+      input, select, button { width: 100%; }
+      input { min-width: 100%; box-sizing: border-box; }
     }
   </style>
 </head>
@@ -50,32 +69,66 @@
     <header class="hero">
       <h1>Dashboard Data Kawasan Permukiman Kumuh</h1>
       <p>Visualisasi data lokasi, luas, bobot, dan kewenangan penanganan kawasan permukiman kumuh berbasis CSV.</p>
+      <div class="source-info">
+        <span>Sumber data: <strong id="sourcePathLabel">data/sumber_data_baru.csv</strong></span>
+        <span id="lastUpdatedLabel">Data terakhir diperbarui: -</span>
+      </div>
     </header>
 
     <section class="cards" aria-label="Ringkasan statistik">
       <article class="card"><strong>Total Lokasi</strong><div id="totalData">0</div></article>
       <article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article>
+      <article class="card"><strong>Total Desa</strong><div id="totalDesa">0</div></article>
       <article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article>
       <article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article>
     </section>
 
+    <section class="panel" aria-label="Ringkasan narasi otomatis">
+      <h2>Ringkasan Narasi Otomatis</h2>
+      <p id="narrativeText" class="narrative">Memuat data...</p>
+    </section>
+
+    <section class="panel" aria-label="Top 10 kecamatan prioritas">
+      <h2>Top 10 Kecamatan Prioritas</h2>
+      <div class="analysis-grid">
+        <article class="analysis-card">
+          <h3>Top 10 Kecamatan Berdasarkan Total Luas Kumuh</h3>
+          <ol id="topLuasList" class="top-list"></ol>
+        </article>
+        <article class="analysis-card">
+          <h3>Top 10 Kecamatan Berdasarkan Jumlah Lokasi</h3>
+          <ol id="topLokasiList" class="top-list"></ol>
+        </article>
+        <article class="analysis-card">
+          <h3>Top 10 Kecamatan Berdasarkan Rata-rata Bobot</h3>
+          <ol id="topBobotList" class="top-list"></ol>
+        </article>
+      </div>
+    </section>
+
     <section class="panel" aria-label="Tabel data kawasan permukiman kumuh">
       <div class="filter">
-        <input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa..." />
+        <input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa, kecamatan..." />
         <select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select>
+        <select id="desaFilter"><option value="">Semua Desa</option></select>
         <select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select>
         <select id="pageSizeSelect">
-          <option value="10">10 / halaman</option>
           <option value="25" selected>25 / halaman</option>
           <option value="50">50 / halaman</option>
+          <option value="100">100 / halaman</option>
+          <option value="200">200 / halaman</option>
+          <option value="300">300 / halaman</option>
+          <option value="all">Semua muncul</option>
         </select>
         <button id="resetFilterBtn" class="secondary-btn">Reset Filter</button>
         <button id="reloadBtn">Muat Ulang Data</button>
+        <button id="exportExcelBtn" class="export-btn">Export Excel</button>
+        <button id="exportPdfBtn" class="export-btn">Export PDF</button>
       </div>
 
       <div class="meta">
         <span id="resultInfo">Menampilkan 0 data</span>
-        <div class="pagination">
+        <div id="paginationTop" class="pagination">
           <button id="prevBtn">Sebelumnya</button>
           <span id="pageInfo">Hal 1/1</span>
           <button id="nextBtn">Berikutnya</button>
@@ -86,7 +139,13 @@
         <table>
           <thead>
             <tr>
-              <th>RT/RW</th><th>Kampung</th><th>Desa</th><th>Kecamatan</th><th class="num">Luas (Ha)</th><th>Kewenangan</th><th class="center">Bobot</th>
+              <th class="sortable" data-sort="rt_rw">RT/RW <span id="sort-rt_rw"></span></th>
+              <th class="sortable" data-sort="kampung">Kampung <span id="sort-kampung"></span></th>
+              <th class="sortable" data-sort="desa">Desa <span id="sort-desa"></span></th>
+              <th class="sortable" data-sort="kecamatan">Kecamatan <span id="sort-kecamatan"></span></th>
+              <th class="sortable num" data-sort="luas_ha">Luas (Ha) <span id="sort-luas_ha"></span></th>
+              <th class="sortable" data-sort="kewenangan">Kewenangan <span id="sort-kewenangan"></span></th>
+              <th class="sortable center" data-sort="bobot_kumuh">Bobot <span id="sort-bobot_kumuh"></span></th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -95,7 +154,7 @@
 
       <div class="meta">
         <span id="resultInfoBottom">Menampilkan 0 data</span>
-        <div class="pagination">
+        <div id="paginationBottom" class="pagination">
           <button id="prevBtnBottom">Sebelumnya</button>
           <span id="pageInfoBottom">Hal 1/1</span>
           <button id="nextBtnBottom">Berikutnya</button>
@@ -106,20 +165,38 @@
 
   <script>
     const CSV_PATHS = ['data/sumber_data_baru.csv'];
-    const state = { rawData: [], filtered: [], page: 1, pageSize: 25 };
-    const numberFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 });
+    const DISPLAY_CSV_PATH = 'data/sumber_data_baru.csv';
+    const state = { rawData: [], filtered: [], page: 1, pageSize: 25, sortKey: '', sortDir: 'asc' };
+    const integerFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 });
+    const decimalFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 });
     const totalLuasFormat = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const avgBobotFormat = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 });
 
     const el = {
-      searchInput: document.getElementById('searchInput'), kecamatanFilter: document.getElementById('kecamatanFilter'), kewenanganFilter: document.getElementById('kewenanganFilter'),
+      searchInput: document.getElementById('searchInput'), kecamatanFilter: document.getElementById('kecamatanFilter'), desaFilter: document.getElementById('desaFilter'), kewenanganFilter: document.getElementById('kewenanganFilter'),
       pageSizeSelect: document.getElementById('pageSizeSelect'), tableBody: document.getElementById('tableBody'), reloadBtn: document.getElementById('reloadBtn'), resetFilterBtn: document.getElementById('resetFilterBtn'),
-      resultInfo: document.getElementById('resultInfo'), resultInfoBottom: document.getElementById('resultInfoBottom'), pageInfo: document.getElementById('pageInfo'), pageInfoBottom: document.getElementById('pageInfoBottom'),
+      exportExcelBtn: document.getElementById('exportExcelBtn'), exportPdfBtn: document.getElementById('exportPdfBtn'), resultInfo: document.getElementById('resultInfo'), resultInfoBottom: document.getElementById('resultInfoBottom'),
+      pageInfo: document.getElementById('pageInfo'), pageInfoBottom: document.getElementById('pageInfoBottom'), paginationTop: document.getElementById('paginationTop'), paginationBottom: document.getElementById('paginationBottom'),
       prevBtn: document.getElementById('prevBtn'), prevBtnBottom: document.getElementById('prevBtnBottom'), nextBtn: document.getElementById('nextBtn'), nextBtnBottom: document.getElementById('nextBtnBottom'),
-      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas')
+      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), totalDesa: document.getElementById('totalDesa'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas'),
+      sourcePathLabel: document.getElementById('sourcePathLabel'), lastUpdatedLabel: document.getElementById('lastUpdatedLabel'), narrativeText: document.getElementById('narrativeText'),
+      topLuasList: document.getElementById('topLuasList'), topLokasiList: document.getElementById('topLokasiList'), topBobotList: document.getElementById('topBobotList')
     };
 
     function parseNumber(value) {
       return Number(String(value || '0').replace(',', '.')) || 0;
+    }
+
+    function formatLuas(value) {
+      return `${decimalFormat.format(parseNumber(value))} Ha`;
+    }
+
+    function formatBobot(value) {
+      return avgBobotFormat.format(parseNumber(value));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
     }
 
     function parseCsv(csvText) {
@@ -147,87 +224,280 @@
       });
     }
 
+    function getSummary(data) {
+      const totalBobot = data.reduce((sum, row) => sum + parseNumber(row.bobot_kumuh), 0);
+      const totalLuas = data.reduce((sum, row) => sum + parseNumber(row.luas_ha), 0);
+      return {
+        lokasi: data.length,
+        kecamatan: new Set(data.map(row => row.kecamatan).filter(Boolean)).size,
+        desa: new Set(data.map(row => row.desa).filter(Boolean)).size,
+        avgBobot: data.length ? totalBobot / data.length : 0,
+        totalLuas
+      };
+    }
+
     function renderStats() {
-      const data = state.filtered;
-      el.totalData.textContent = numberFormat.format(data.length);
-      el.totalKecamatan.textContent = numberFormat.format(new Set(data.map(d => d.kecamatan)).size);
-      const avg = data.length ? data.reduce((a, b) => a + parseNumber(b.bobot_kumuh), 0) / data.length : 0;
-      const sum = data.reduce((a, b) => a + parseNumber(b.luas_ha), 0);
-      el.avgBobot.textContent = data.length ? avg.toFixed(1) : '0';
-      el.sumLuas.textContent = data.length ? totalLuasFormat.format(sum) : '0';
+      const summary = getSummary(state.filtered);
+      el.totalData.textContent = integerFormat.format(summary.lokasi);
+      el.totalKecamatan.textContent = integerFormat.format(summary.kecamatan);
+      el.totalDesa.textContent = integerFormat.format(summary.desa);
+      el.avgBobot.textContent = summary.lokasi ? avgBobotFormat.format(summary.avgBobot) : '0';
+      el.sumLuas.textContent = summary.lokasi ? `${totalLuasFormat.format(summary.totalLuas)} Ha` : '0';
+    }
+
+    function renderNarrative() {
+      const summary = getSummary(state.filtered);
+      if (!summary.lokasi) {
+        el.narrativeText.textContent = 'Tidak ditemukan data sesuai filter yang dipilih.';
+        return;
+      }
+      const totalLuas = `${totalLuasFormat.format(summary.totalLuas)} Ha`;
+      const avgBobot = avgBobotFormat.format(summary.avgBobot);
+      if (el.kecamatanFilter.value) {
+        el.narrativeText.textContent = `Pada Kecamatan ${el.kecamatanFilter.value}, terdapat ${integerFormat.format(summary.lokasi)} lokasi kawasan permukiman kumuh yang tersebar di ${integerFormat.format(summary.desa)} desa, dengan total luas ${totalLuas} dan rata-rata bobot ${avgBobot}.`;
+        return;
+      }
+      el.narrativeText.textContent = `Berdasarkan data yang tersedia, terdapat ${integerFormat.format(summary.lokasi)} lokasi kawasan permukiman kumuh yang tersebar di ${integerFormat.format(summary.kecamatan)} kecamatan dan ${integerFormat.format(summary.desa)} desa, dengan total luas ${totalLuas} dan rata-rata bobot ${avgBobot}.`;
     }
 
     function renderFilters() {
-      const kec = [...new Set(state.rawData.map(d => d.kecamatan))].sort();
-      const kew = [...new Set(state.rawData.map(d => d.kewenangan))].sort();
-      el.kecamatanFilter.innerHTML = '<option value="">Semua Kecamatan</option>' + kec.map(v => `<option value="${v}">${v}</option>`).join('');
-      el.kewenanganFilter.innerHTML = '<option value="">Semua Kewenangan</option>' + kew.map(v => `<option value="${v}">${v}</option>`).join('');
+      const kecamatan = [...new Set(state.rawData.map(d => d.kecamatan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+      const kewenangan = [...new Set(state.rawData.map(d => d.kewenangan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+      el.kecamatanFilter.innerHTML = '<option value="">Semua Kecamatan</option>' + kecamatan.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      el.kewenanganFilter.innerHTML = '<option value="">Semua Kewenangan</option>' + kewenangan.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      renderDesaFilter('');
+    }
+
+    function renderDesaFilter(selectedValue = el.desaFilter.value) {
+      const kecamatan = el.kecamatanFilter.value;
+      const source = kecamatan ? state.rawData.filter(d => d.kecamatan === kecamatan) : state.rawData;
+      const desa = [...new Set(source.map(d => d.desa).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+      el.desaFilter.innerHTML = '<option value="">Semua Desa</option>' + desa.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      el.desaFilter.value = desa.includes(selectedValue) ? selectedValue : '';
+    }
+
+    function applySorting(data) {
+      if (!state.sortKey) return [...data];
+      const numericKeys = ['luas_ha', 'bobot_kumuh'];
+      return [...data].sort((a, b) => {
+        const left = numericKeys.includes(state.sortKey) ? parseNumber(a[state.sortKey]) : String(a[state.sortKey] || '').toLowerCase();
+        const right = numericKeys.includes(state.sortKey) ? parseNumber(b[state.sortKey]) : String(b[state.sortKey] || '').toLowerCase();
+        if (left < right) return state.sortDir === 'asc' ? -1 : 1;
+        if (left > right) return state.sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
     }
 
     function applyFilters() {
       const q = el.searchInput.value.toLowerCase().trim();
-      const kec = el.kecamatanFilter.value;
-      const kew = el.kewenanganFilter.value;
-      state.filtered = state.rawData.filter(d => {
-        const matchQ = !q || `${d.rt_rw} ${d.kampung} ${d.desa} ${d.kecamatan}`.toLowerCase().includes(q);
-        return matchQ && (!kec || d.kecamatan === kec) && (!kew || d.kewenangan === kew);
+      const kecamatan = el.kecamatanFilter.value;
+      const desa = el.desaFilter.value;
+      const kewenangan = el.kewenanganFilter.value;
+      const filtered = state.rawData.filter(d => {
+        const searchable = `${d.rt_rw} ${d.kampung} ${d.desa} ${d.kecamatan} ${d.kewenangan} ${d.bobot_kumuh} ${d.luas_ha}`.toLowerCase();
+        const matchQ = !q || searchable.includes(q);
+        return matchQ && (!kecamatan || d.kecamatan === kecamatan) && (!desa || d.desa === desa) && (!kewenangan || d.kewenangan === kewenangan);
       });
+      state.filtered = applySorting(filtered);
       state.page = 1;
-      renderTable();
+      renderDashboard();
+    }
+
+    function renderSortIndicators() {
+      document.querySelectorAll('[id^="sort-"]').forEach(span => { span.textContent = ''; });
+      if (!state.sortKey) return;
+      const active = document.getElementById(`sort-${state.sortKey}`);
+      if (active) active.textContent = state.sortDir === 'asc' ? '▲' : '▼';
+    }
+
+    function getPageSize() {
+      return state.pageSize === 'all' ? state.filtered.length || 1 : Number(state.pageSize);
     }
 
     function renderTable() {
       renderStats();
       const total = state.filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+      const showAll = state.pageSize === 'all';
+      const pageSize = getPageSize();
+      const totalPages = showAll ? 1 : Math.max(1, Math.ceil(total / pageSize));
       if (state.page > totalPages) state.page = totalPages;
-      const start = (state.page - 1) * state.pageSize;
-      const end = Math.min(start + state.pageSize, total);
+      const start = showAll ? 0 : (state.page - 1) * pageSize;
+      const end = showAll ? total : Math.min(start + pageSize, total);
       const rows = state.filtered.slice(start, end);
-      el.tableBody.innerHTML = rows.map(d => `<tr><td>${d.rt_rw}</td><td>${d.kampung}</td><td>${d.desa}</td><td>${d.kecamatan}</td><td class="num">${numberFormat.format(parseNumber(d.luas_ha))}</td><td>${d.kewenangan}</td><td class="center">${d.bobot_kumuh}</td></tr>`).join('') || '<tr><td colspan="7">Data tidak ditemukan.</td></tr>';
-      const infoText = `Menampilkan ${total === 0 ? 0 : start + 1}-${end} dari ${total} data`;
+      el.tableBody.innerHTML = rows.map(d => `<tr><td>${escapeHtml(d.rt_rw)}</td><td>${escapeHtml(d.kampung)}</td><td>${escapeHtml(d.desa)}</td><td>${escapeHtml(d.kecamatan)}</td><td class="num">${formatLuas(d.luas_ha)}</td><td>${escapeHtml(d.kewenangan)}</td><td class="center">${formatBobot(d.bobot_kumuh)}</td></tr>`).join('') || '<tr><td colspan="7">Data tidak ditemukan.</td></tr>';
+      const infoText = `Menampilkan ${total === 0 ? 0 : start + 1}-${end} dari ${integerFormat.format(total)} data`;
       const pageText = `Hal ${state.page}/${totalPages}`;
+      const paginationHidden = total === 0 || showAll;
       el.resultInfo.textContent = infoText;
       el.resultInfoBottom.textContent = infoText;
       el.pageInfo.textContent = pageText;
       el.pageInfoBottom.textContent = pageText;
-      el.prevBtn.disabled = state.page <= 1;
-      el.prevBtnBottom.disabled = state.page <= 1;
-      el.nextBtn.disabled = state.page >= totalPages;
-      el.nextBtnBottom.disabled = state.page >= totalPages;
+      el.paginationTop.classList.toggle('is-hidden', paginationHidden);
+      el.paginationBottom.classList.toggle('is-hidden', paginationHidden);
+      el.prevBtn.disabled = state.page <= 1 || paginationHidden;
+      el.prevBtnBottom.disabled = state.page <= 1 || paginationHidden;
+      el.nextBtn.disabled = state.page >= totalPages || paginationHidden;
+      el.nextBtnBottom.disabled = state.page >= totalPages || paginationHidden;
+    }
+
+    function aggregateByKecamatan(data) {
+      const grouped = new Map();
+      data.forEach(row => {
+        const key = row.kecamatan || '-';
+        if (!grouped.has(key)) grouped.set(key, { name: key, lokasi: 0, totalLuas: 0, totalBobot: 0 });
+        const item = grouped.get(key);
+        item.lokasi += 1;
+        item.totalLuas += parseNumber(row.luas_ha);
+        item.totalBobot += parseNumber(row.bobot_kumuh);
+      });
+      return [...grouped.values()].map(item => ({ ...item, avgBobot: item.lokasi ? item.totalBobot / item.lokasi : 0 }));
+    }
+
+    function renderTopList(target, items, formatter) {
+      target.innerHTML = items.length ? items.slice(0, 10).map(item => `<li><strong>${escapeHtml(item.name)}</strong> — ${formatter(item)}</li>`).join('') : '<li>Data tidak tersedia.</li>';
+    }
+
+    function renderTopKecamatan() {
+      const grouped = aggregateByKecamatan(state.filtered);
+      renderTopList(el.topLuasList, [...grouped].sort((a, b) => b.totalLuas - a.totalLuas), item => `${totalLuasFormat.format(item.totalLuas)} Ha`);
+      renderTopList(el.topLokasiList, [...grouped].sort((a, b) => b.lokasi - a.lokasi), item => `${integerFormat.format(item.lokasi)} lokasi`);
+      renderTopList(el.topBobotList, [...grouped].sort((a, b) => b.avgBobot - a.avgBobot), item => `rata-rata bobot ${avgBobotFormat.format(item.avgBobot)}`);
+    }
+
+    function renderDashboard() {
+      renderStats();
+      renderNarrative();
+      renderTopKecamatan();
+      renderSortIndicators();
+      renderTable();
+    }
+
+    function goToPage(direction) {
+      const totalPages = state.pageSize === 'all' ? 1 : Math.max(1, Math.ceil(state.filtered.length / getPageSize()));
+      state.page = Math.min(Math.max(1, state.page + direction), totalPages);
+      renderTable();
+    }
+
+    function handleSort(key) {
+      if (state.sortKey === key) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortKey = key;
+        state.sortDir = ['luas_ha', 'bobot_kumuh'].includes(key) ? 'desc' : 'asc';
+      }
+      state.filtered = applySorting(state.filtered);
+      state.page = 1;
+      renderDashboard();
+    }
+
+    function isFiltered() {
+      return Boolean(el.searchInput.value.trim() || el.kecamatanFilter.value || el.desaFilter.value || el.kewenanganFilter.value);
+    }
+
+    function exportRows() {
+      return state.filtered.map(row => ({
+        'RT/RW': row.rt_rw,
+        'Kampung': row.kampung,
+        'Desa': row.desa,
+        'Kecamatan': row.kecamatan,
+        'Luas (Ha)': decimalFormat.format(parseNumber(row.luas_ha)),
+        'Kewenangan': row.kewenangan,
+        'Bobot': formatBobot(row.bobot_kumuh)
+      }));
+    }
+
+    function exportExcel() {
+      if (!window.XLSX) {
+        alert('Library export Excel belum berhasil dimuat. Periksa koneksi internet lalu coba lagi.');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(exportRows());
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Kawasan Kumuh');
+      XLSX.writeFile(workbook, isFiltered() ? 'data-kawasan-kumuh-filtered.xlsx' : 'data-kawasan-kumuh.xlsx');
+    }
+
+    function exportPdf() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('Library export PDF belum berhasil dimuat. Periksa koneksi internet lalu coba lagi.');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const summary = getSummary(state.filtered);
+      doc.setFontSize(14);
+      doc.text('Dashboard Data Kawasan Permukiman Kumuh', 14, 14);
+      doc.setFontSize(10);
+      doc.text(`Total Lokasi: ${integerFormat.format(summary.lokasi)}`, 14, 24);
+      doc.text(`Total Kecamatan: ${integerFormat.format(summary.kecamatan)}`, 70, 24);
+      doc.text(`Total Desa: ${integerFormat.format(summary.desa)}`, 135, 24);
+      doc.text(`Rata-rata Bobot: ${summary.lokasi ? avgBobotFormat.format(summary.avgBobot) : '0'}`, 190, 24);
+      doc.text(`Total Luas: ${summary.lokasi ? totalLuasFormat.format(summary.totalLuas) : '0'} Ha`, 14, 31);
+      doc.autoTable({
+        startY: 38,
+        head: [['RT/RW', 'Kampung', 'Desa', 'Kecamatan', 'Luas', 'Kewenangan', 'Bobot']],
+        body: state.filtered.map(row => [row.rt_rw, row.kampung, row.desa, row.kecamatan, formatLuas(row.luas_ha), row.kewenangan, formatBobot(row.bobot_kumuh)]),
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [15, 118, 110] },
+        columnStyles: { 4: { halign: 'right' }, 6: { halign: 'center' } },
+        margin: { left: 14, right: 14 }
+      });
+      doc.save(isFiltered() ? 'data-kawasan-kumuh-filtered.pdf' : 'data-kawasan-kumuh.pdf');
+    }
+
+    function resetFilters() {
+      el.searchInput.value = '';
+      el.kecamatanFilter.value = '';
+      renderDesaFilter('');
+      el.kewenanganFilter.value = '';
+      state.page = 1;
+      applyFilters();
     }
 
     async function loadData() {
       let loaded = null;
+      let lastModified = '';
       for (const path of CSV_PATHS) {
         try {
           const res = await fetch(path);
-          if (res.ok) { loaded = await res.text(); break; }
+          if (res.ok) {
+            loaded = await res.text();
+            lastModified = res.headers.get('Last-Modified') || '';
+            break;
+          }
         } catch (_) {}
       }
       if (!loaded) {
-        el.tableBody.innerHTML = '<tr><td colspan="7">Gagal memuat CSV. Jalankan: cd web && python3 -m http.server 8000</td></tr>';
+        el.tableBody.innerHTML = '<tr><td colspan="7">Gagal memuat CSV. Jalankan: python3 -m http.server 8000</td></tr>';
         return;
       }
       const selectedKecamatan = el.kecamatanFilter.value;
+      const selectedDesa = el.desaFilter.value;
       const selectedKewenangan = el.kewenanganFilter.value;
       state.rawData = parseCsv(loaded);
+      el.sourcePathLabel.textContent = DISPLAY_CSV_PATH;
+      el.lastUpdatedLabel.textContent = lastModified ? `Data terakhir diperbarui: ${new Date(lastModified).toLocaleString('id-ID')}` : 'Data terakhir diperbarui: -';
       renderFilters();
       el.kecamatanFilter.value = [...el.kecamatanFilter.options].some(option => option.value === selectedKecamatan) ? selectedKecamatan : '';
+      renderDesaFilter(selectedDesa);
       el.kewenanganFilter.value = [...el.kewenanganFilter.options].some(option => option.value === selectedKewenangan) ? selectedKewenangan : '';
       applyFilters();
     }
 
     el.searchInput.addEventListener('input', applyFilters);
-    el.kecamatanFilter.addEventListener('change', applyFilters);
+    el.kecamatanFilter.addEventListener('change', () => { renderDesaFilter(''); applyFilters(); });
+    el.desaFilter.addEventListener('change', applyFilters);
     el.kewenanganFilter.addEventListener('change', applyFilters);
-    el.pageSizeSelect.addEventListener('change', () => { state.pageSize = Number(el.pageSizeSelect.value); state.page = 1; renderTable(); });
-    el.prevBtn.addEventListener('click', () => { if (state.page > 1) { state.page--; renderTable(); } });
-    el.prevBtnBottom.addEventListener('click', () => { if (state.page > 1) { state.page--; renderTable(); } });
-    el.nextBtn.addEventListener('click', () => { const max = Math.max(1, Math.ceil(state.filtered.length / state.pageSize)); if (state.page < max) { state.page++; renderTable(); } });
-    el.nextBtnBottom.addEventListener('click', () => { const max = Math.max(1, Math.ceil(state.filtered.length / state.pageSize)); if (state.page < max) { state.page++; renderTable(); } });
-    el.resetFilterBtn.addEventListener('click', () => { el.searchInput.value = ''; el.kecamatanFilter.value = ''; el.kewenanganFilter.value = ''; applyFilters(); });
+    el.pageSizeSelect.addEventListener('change', () => { state.pageSize = el.pageSizeSelect.value === 'all' ? 'all' : Number(el.pageSizeSelect.value); state.page = 1; renderDashboard(); });
+    document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => handleSort(th.dataset.sort)));
+    el.prevBtn.addEventListener('click', () => goToPage(-1));
+    el.prevBtnBottom.addEventListener('click', () => goToPage(-1));
+    el.nextBtn.addEventListener('click', () => goToPage(1));
+    el.nextBtnBottom.addEventListener('click', () => goToPage(1));
+    el.resetFilterBtn.addEventListener('click', resetFilters);
     el.reloadBtn.addEventListener('click', loadData);
+    el.exportExcelBtn.addEventListener('click', exportExcel);
+    el.exportPdfBtn.addEventListener('click', exportPdf);
 
     loadData();
   </script>
