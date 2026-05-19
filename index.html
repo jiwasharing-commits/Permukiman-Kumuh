@@ -3,173 +3,129 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Kawasan Kumuh</title>
+  <title>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fb; color: #1f2937; }
-    .cards { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
-    .card { background: white; padding: 14px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
-    th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 10px; font-size: 14px; }
-    th { background: #0f766e; color: white; position: sticky; top: 0; }
-    .filter { margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap; }
-    input, select, button { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
-    button { background: #0f766e; color: white; border: none; cursor: pointer; }
-    .meta { display:flex; justify-content:space-between; align-items:center; margin:10px 0; font-size: 13px; color:#4b5563; }
+    :root { color-scheme: light; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f6fb; color: #1f2937; }
+    .container { max-width: 1240px; margin: 0 auto; padding: 28px 24px 36px; }
+    .hero { background: linear-gradient(135deg, #0f766e, #115e59); color: white; padding: 24px; border-radius: 16px; box-shadow: 0 10px 28px rgba(15, 118, 110, .18); margin-bottom: 18px; }
+    .hero h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; }
+    .source-info { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #ecfeff; }
+    .source-info span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 6px 10px; }
+    .cards { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .08); border: 1px solid #e5e7eb; }
+    .card strong { display: block; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .card div { font-size: 23px; font-weight: 700; color: #0f766e; }
+    .panel { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .06); margin-bottom: 18px; }
+    .panel h2 { margin: 0 0 10px; font-size: 18px; color: #0f172a; }
+    .narrative { margin: 0; color: #334155; line-height: 1.6; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
+    .analysis-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; background: #f8fafc; }
+    .analysis-card h3 { margin: 0 0 10px; font-size: 14px; color: #0f766e; }
+    .top-list { margin: 0; padding-left: 22px; color: #334155; font-size: 13px; line-height: 1.7; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+    th { background: #0f766e; color: white; position: sticky; top: 0; z-index: 1; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: #115e59; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .filter { margin: 0 0 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    input, select, button { padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 9px; font-size: 13px; }
+    input { min-width: 280px; }
+    button { background: #0f766e; color: white; border: none; cursor: pointer; font-weight: 700; }
+    .secondary-btn { background: #e2e8f0; color: #334155; }
+    .export-btn { background: #1d4ed8; }
+    .meta { display:flex; justify-content:space-between; align-items:center; gap: 12px; margin:10px 0; font-size: 13px; color:#4b5563; flex-wrap: wrap; }
     .pagination { display:flex; gap:6px; align-items:center; }
     .pagination button[disabled] { background:#9ca3af; cursor:not-allowed; }
-    .table-wrap { max-height: 60vh; overflow: auto; border-radius: 10px; }
+    .pagination.is-hidden, .is-hidden { display: none; }
+    .summary-toggle { margin-bottom: 18px; }
+    .table-wrap { max-height: 60vh; overflow: auto; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .center { text-align: center; }
+    .sector-tabs { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
+    .sector-tab { background:#e2e8f0; color:#334155; }
+    .sector-tab.active { background:#0f766e; color:white; }
+    .detail-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1000; }
+    .detail-card { width:min(900px,100%); max-height:90vh; overflow:auto; background:white; border-radius:14px; padding:16px; }
+    .detail-grid { display:grid; grid-template-columns: repeat(2, minmax(200px, 1fr)); gap:8px 14px; margin-bottom:12px; }
+    .rekap-grid { display:grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap:10px; }
+    .rekap-item { background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; font-size:13px; }
+    @media (max-width: 960px) { .analysis-grid,.rekap-grid { grid-template-columns:1fr; } .cards { grid-template-columns: repeat(2, minmax(160px, 1fr)); } }
+    @media (max-width: 640px) {
+      .container { padding: 18px 12px 28px; }
+      .cards { display:flex; overflow-x:auto; padding-bottom:8px; }
+      .card { flex: 0 0 170px; }
+      input, select, button { width: 100%; }
+      input { min-width: 100%; box-sizing: border-box; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1>Dashboard Kawasan Kumuh</h1>
-  <p>Tabel langsung tampil saat web dibuka. Data interaktif dari CSV.</p>
-
-  <section class="cards">
-    <article class="card"><strong>Total Data</strong><div id="totalData">0</div></article>
-    <article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article>
-    <article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article>
-    <article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article>
+<main class="container">
+  <header class="hero"><h1>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</h1><div class="source-info"><span>Sumber data: <strong id="sourcePathLabel">data/sumber_data_baru.csv</strong></span><span id="lastUpdatedLabel">Data terakhir diperbarui: -</span></div></header>
+  <section class="cards"><article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article><article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article><article class="card"><strong>Total Desa</strong><div id="totalDesa">0</div></article><article class="card"><strong>Total Kampung</strong><div id="totalKampung">0</div></article><article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article><article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article></section>
+  <div class="summary-toggle"><button id="summaryToggleBtn" class="secondary-btn">Sembunyikan Ringkasan & Top 10</button></div>
+  <section id="narrativePanel" class="panel"><div class="meta"><h2>Ringkasan Narasi Otomatis</h2><button id="copySummaryBtn" class="secondary-btn">Copy Ringkasan</button></div><p id="narrativeText" class="narrative">Memuat data...</p></section>
+  <section id="top10Panel" class="panel"><div class="meta"><h2>Top 10 Kecamatan Prioritas</h2><div style="display:flex; gap:8px; flex-wrap:wrap;"><button id="copyTop10Btn" class="secondary-btn">Copy Top 10</button><button id="copyAllBtn" class="secondary-btn">Copy Semua</button></div></div><div class="analysis-grid"><article class="analysis-card"><h3>Top 10 Kecamatan Berdasarkan Total Luas Kumuh</h3><ol id="topLuasList" class="top-list"></ol></article><article class="analysis-card"><h3>Top 10 Kecamatan Berdasarkan Jumlah Lokasi</h3><ol id="topLokasiList" class="top-list"></ol></article><article class="analysis-card"><h3>Top 10 Kecamatan Berdasarkan Rata-rata Bobot</h3><ol id="topBobotList" class="top-list"></ol></article></div></section>
+  <section class="panel"><h2>Rekap Kebutuhan Infrastruktur</h2><div id="rekapGrid" class="rekap-grid"></div></section>
+  <section class="panel"><div class="filter"><input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa, kecamatan..." /><select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select><select id="desaFilter"><option value="">Semua Desa</option></select><select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select><select id="pageSizeSelect"><option value="25" selected>25 / halaman</option><option value="50">50 / halaman</option><option value="100">100 / halaman</option><option value="200">200 / halaman</option><option value="300">300 / halaman</option><option value="all">Semua muncul</option></select><button id="resetFilterBtn" class="secondary-btn">Reset Filter</button><button id="reloadBtn">Muat Ulang Data</button><button id="exportExcelBtn" class="export-btn">Export Excel</button><button id="exportPdfBtn" class="export-btn">Export PDF</button></div>
+    <div id="sectorTabs" class="sector-tabs"></div>
+    <div class="meta"><span id="resultInfo">Menampilkan 0 data</span><div id="paginationTop" class="pagination"><button id="prevBtn">Sebelumnya</button><span id="pageInfo">Hal 1/1</span><button id="nextBtn">Berikutnya</button></div></div>
+    <div class="table-wrap"><table><thead><tr id="tableHeadRow"></tr></thead><tbody id="tableBody"></tbody></table></div>
+    <div class="meta"><span id="resultInfoBottom">Menampilkan 0 data</span><div id="paginationBottom" class="pagination"><button id="prevBtnBottom">Sebelumnya</button><span id="pageInfoBottom">Hal 1/1</span><button id="nextBtnBottom">Berikutnya</button></div></div>
   </section>
-
-  <div class="filter">
-    <input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa..." />
-    <select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select>
-    <select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select>
-    <select id="pageSizeSelect">
-      <option value="10">10 / halaman</option>
-      <option value="25" selected>25 / halaman</option>
-      <option value="50">50 / halaman</option>
-    </select>
-    <button id="reloadBtn">Muat Ulang Data</button>
-  </div>
-
-  <div class="meta">
-    <span id="resultInfo">Menampilkan 0 data</span>
-    <div class="pagination">
-      <button id="prevBtn">Sebelumnya</button>
-      <span id="pageInfo">Hal 1/1</span>
-      <button id="nextBtn">Berikutnya</button>
-    </div>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>RT/RW</th><th>Kampung</th><th>Desa</th><th>Kecamatan</th><th>Luas (Ha)</th><th>Kewenangan</th><th>Bobot</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-
-  <script>
-    const CSV_PATHS = ['data/sumber_data_baru.csv'];
-    const state = { rawData: [], filtered: [], page: 1, pageSize: 25 };
-
-    const el = {
-      searchInput: document.getElementById('searchInput'), kecamatanFilter: document.getElementById('kecamatanFilter'), kewenanganFilter: document.getElementById('kewenanganFilter'),
-      pageSizeSelect: document.getElementById('pageSizeSelect'), tableBody: document.getElementById('tableBody'), reloadBtn: document.getElementById('reloadBtn'),
-      resultInfo: document.getElementById('resultInfo'), pageInfo: document.getElementById('pageInfo'), prevBtn: document.getElementById('prevBtn'), nextBtn: document.getElementById('nextBtn'),
-      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas')
-    };
-
-    function parseCsv(csvText) {
-      const lines = csvText.trim().split(/\r?\n/);
-      const headers = lines[0].split(',').map(h => h.trim());
-      const idx = Object.fromEntries(headers.map((h, i) => [h, i]));
-      const get = (cols, keys) => {
-        for (const key of keys) {
-          if (idx[key] !== undefined) return (cols[idx[key]] || '').trim();
-        }
-        return '';
-      };
-
-      return lines.slice(1).filter(Boolean).map(line => {
-        const cols = line.split(',');
-        return {
-          rt_rw: get(cols, ['rt_rw', 'RT/RW']),
-          kampung: get(cols, ['kampung', 'KAMPUNG']),
-          desa: get(cols, ['desa', 'DESA']),
-          kecamatan: get(cols, ['kecamatan', 'KECAMATAN']),
-          luas_ha: get(cols, ['luas_ha', 'LUAS (Ha)']),
-          kewenangan: get(cols, ['kewenangan', 'KEWENANGAN']),
-          bobot_kumuh: get(cols, ['bobot_kumuh', 'Bobot Kumuh'])
-        };
-      });
-    }
-
-    function renderStats() {
-      const data = state.rawData;
-      el.totalData.textContent = data.length;
-      el.totalKecamatan.textContent = new Set(data.map(d => d.kecamatan)).size;
-      const avg = data.length ? data.reduce((a, b) => a + Number(b.bobot_kumuh || 0), 0) / data.length : 0;
-      const sum = data.reduce((a, b) => a + Number(b.luas_ha || 0), 0);
-      el.avgBobot.textContent = avg.toFixed(1);
-      el.sumLuas.textContent = sum.toFixed(3);
-    }
-
-    function renderFilters() {
-      const kec = [...new Set(state.rawData.map(d => d.kecamatan))].sort();
-      const kew = [...new Set(state.rawData.map(d => d.kewenangan))].sort();
-      el.kecamatanFilter.innerHTML = '<option value="">Semua Kecamatan</option>' + kec.map(v => `<option value="${v}">${v}</option>`).join('');
-      el.kewenanganFilter.innerHTML = '<option value="">Semua Kewenangan</option>' + kew.map(v => `<option value="${v}">${v}</option>`).join('');
-    }
-
-    function applyFilters() {
-      const q = el.searchInput.value.toLowerCase().trim();
-      const kec = el.kecamatanFilter.value;
-      const kew = el.kewenanganFilter.value;
-      state.filtered = state.rawData.filter(d => {
-        const matchQ = !q || `${d.rt_rw} ${d.kampung} ${d.desa} ${d.kecamatan}`.toLowerCase().includes(q);
-        return matchQ && (!kec || d.kecamatan === kec) && (!kew || d.kewenangan === kew);
-      });
-      state.page = 1;
-      renderTable();
-    }
-
-    function renderTable() {
-      const total = state.filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-      if (state.page > totalPages) state.page = totalPages;
-      const start = (state.page - 1) * state.pageSize;
-      const end = Math.min(start + state.pageSize, total);
-      const rows = state.filtered.slice(start, end);
-      el.tableBody.innerHTML = rows.map(d => `<tr><td>${d.rt_rw}</td><td>${d.kampung}</td><td>${d.desa}</td><td>${d.kecamatan}</td><td>${d.luas_ha}</td><td>${d.kewenangan}</td><td>${d.bobot_kumuh}</td></tr>`).join('') || '<tr><td colspan="7">Data tidak ditemukan.</td></tr>';
-      el.resultInfo.textContent = `Menampilkan ${total === 0 ? 0 : start + 1}-${end} dari ${total} data`;
-      el.pageInfo.textContent = `Hal ${state.page}/${totalPages}`;
-      el.prevBtn.disabled = state.page <= 1;
-      el.nextBtn.disabled = state.page >= totalPages;
-    }
-
-    async function loadData() {
-      let loaded = null;
-      for (const path of CSV_PATHS) {
-        try {
-          const res = await fetch(path);
-          if (res.ok) { loaded = await res.text(); break; }
-        } catch (_) {}
-      }
-      if (!loaded) {
-        el.tableBody.innerHTML = '<tr><td colspan="7">Gagal memuat CSV. Jalankan: cd web && python3 -m http.server 8000</td></tr>';
-        return;
-      }
-      state.rawData = parseCsv(loaded);
-      state.filtered = [...state.rawData];
-      renderStats();
-      renderFilters();
-      renderTable();
-    }
-
-    el.searchInput.addEventListener('input', applyFilters);
-    el.kecamatanFilter.addEventListener('change', applyFilters);
-    el.kewenanganFilter.addEventListener('change', applyFilters);
-    el.pageSizeSelect.addEventListener('change', () => { state.pageSize = Number(el.pageSizeSelect.value); state.page = 1; renderTable(); });
-    el.prevBtn.addEventListener('click', () => { if (state.page > 1) { state.page--; renderTable(); } });
-    el.nextBtn.addEventListener('click', () => { const max = Math.max(1, Math.ceil(state.filtered.length / state.pageSize)); if (state.page < max) { state.page++; renderTable(); } });
-    el.reloadBtn.addEventListener('click', loadData);
-
-    loadData();
-  </script>
-</body>
-</html>
+</main>
+<div id="detailModal" class="detail-modal is-hidden"><div class="detail-card"><div class="meta"><h2>Detail Lokasi</h2><button id="closeDetailBtn" class="secondary-btn">Tutup</button></div><div id="detailContent"></div></div></div>
+<script>
+const CSV_PATHS=['data/sumber_data_baru.csv']; const DISPLAY_CSV_PATH='data/sumber_data_baru.csv';
+const state={rawData:[],filtered:[],page:1,pageSize:25,sortKey:'',sortDir:'asc',summaryVisible:true,activeSector:'ringkasan'};
+const integerFormat=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}); const decimalFormat=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); const totalLuasFormat=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); const avgBobotFormat=new Intl.NumberFormat('id-ID',{maximumFractionDigits:1});
+const SECTOR_TABS=[{key:'ringkasan',label:'Ringkasan'},{key:'bangunan',label:'Bangunan'},{key:'jalan',label:'Jalan Lingkungan'},{key:'air',label:'Air Minum'},{key:'drainase',label:'Drainase'},{key:'sanitasi',label:'Sanitasi'},{key:'persampahan',label:'Persampahan'},{key:'proteksi',label:'Proteksi Kebakaran'}];
+const TECH_FIELDS={jalanLingkunganBangunan:{labels:['Jalan Lingkungan','Jalan Lingkungan Bangunan'],keys:['jalan_lingkungan_bangunan']},relokasi:{labels:['Relokasi'],keys:['relokasi']},rtlh:{labels:['RTLH'],keys:['rtlh']},jalanBaru:{labels:['Jalan Baru'],keys:['jalan_baru']},jalanRusak:{labels:['Jalan Rusak'],keys:['jalan_rusak']},sabAkses:{labels:['SAB Akses'],keys:['sab_akses']},sabKebutuhan:{labels:['SAB Kebutuhan'],keys:['sab_kebutuhan']},drainaseLimpasan:{labels:['Drainase Limpasan'],keys:['drainase_limpasan']},drainaseBaru:{labels:['Drainase Baru'],keys:['drainase_baru']},drainaseRusak:{labels:['Drainase Rusak'],keys:['drainase_rusak']},septictankKomunal:{labels:['Septictank Komunal'],keys:['septictank_komunal']},jambanPribadi:{labels:['Jamban Pribadi'],keys:['jamban_pribadi']},tpsTpst:{labels:['TPS/TPST'],keys:['tps_tpst']},tps3rBank:{labels:['TPS3R/Bank Sampah'],keys:['tps3r_bank_sampah']},proteksiJalanSumberAir:{labels:['Proteksi Jalan Lingkungan/Sumber Air'],keys:['proteksi_jalan_sumber_air']},proteksiAparDamkar:{labels:['Proteksi APAR/Mobil/Motor Damkar'],keys:['proteksi_apar_damkar']}};
+const SECTOR_COLUMNS={ringkasan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'luas_ha',l:'LUAS (Ha)',num:true},{k:'kewenangan',l:'KEWENANGAN'},{k:'bobot_kumuh',l:'Bobot Kumuh',center:true},{k:'tingkat_kekumuhan_awal',l:'Tingkat Kekumuhan Awal'},{k:'pembagian_kawasan_kumuh',l:'Pembagian Kawasan Kumuh'},{k:'aksi',l:'Aksi'}],bangunan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'jalanLingkunganBangunan_kebutuhan',l:'Jalan Lingkungan (Kebutuhan)',num:true},{k:'jalanLingkunganBangunan_numerik',l:'Jalan Lingkungan (Numerik)',num:true},{k:'relokasi_kebutuhan',l:'Relokasi (Kebutuhan)',num:true},{k:'relokasi_numerik',l:'Relokasi (Numerik)',num:true},{k:'rtlh_kebutuhan',l:'RTLH (Kebutuhan)',num:true},{k:'rtlh_numerik',l:'RTLH (Numerik)',num:true}],jalan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'jalanBaru_kebutuhan',l:'Jalan Baru (Kebutuhan)',num:true},{k:'jalanBaru_numerik',l:'Jalan Baru (Numerik)',num:true},{k:'jalanRusak_kebutuhan',l:'Jalan Rusak (Kebutuhan)',num:true},{k:'jalanRusak_numerik',l:'Jalan Rusak (Numerik)',num:true}],air:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'sabAkses_kebutuhan',l:'SAB Akses (Kebutuhan)',num:true},{k:'sabAkses_numerik',l:'SAB Akses (Numerik)',num:true},{k:'sabKebutuhan_kebutuhan',l:'SAB Kebutuhan (Kebutuhan)',num:true},{k:'sabKebutuhan_numerik',l:'SAB Kebutuhan (Numerik)',num:true}],drainase:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'drainaseLimpasan_kebutuhan',l:'Drainase Limpasan (Kebutuhan)',num:true},{k:'drainaseLimpasan_numerik',l:'Drainase Limpasan (Numerik)',num:true},{k:'drainaseBaru_kebutuhan',l:'Drainase Baru (Kebutuhan)',num:true},{k:'drainaseBaru_numerik',l:'Drainase Baru (Numerik)',num:true},{k:'drainaseRusak_kebutuhan',l:'Drainase Rusak (Kebutuhan)',num:true},{k:'drainaseRusak_numerik',l:'Drainase Rusak (Numerik)',num:true}],sanitasi:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'septictankKomunal_kebutuhan',l:'Septictank Komunal (Kebutuhan)',num:true},{k:'septictankKomunal_numerik',l:'Septictank Komunal (Numerik)',num:true},{k:'jambanPribadi_kebutuhan',l:'Jamban Pribadi (Kebutuhan)',num:true},{k:'jambanPribadi_numerik',l:'Jamban Pribadi (Numerik)',num:true}],persampahan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'tpsTpst_kebutuhan',l:'TPS/TPST (Kebutuhan)',num:true},{k:'tpsTpst_numerik',l:'TPS/TPST (Numerik)',num:true},{k:'tps3rBank_kebutuhan',l:'TPS3R/Bank Sampah (Kebutuhan)',num:true},{k:'tps3rBank_numerik',l:'TPS3R/Bank Sampah (Numerik)',num:true}],proteksi:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'proteksiJalanSumberAir_kebutuhan',l:'Jalan Lingkungan/Sumber Air (Kebutuhan)',num:true},{k:'proteksiJalanSumberAir_numerik',l:'Jalan Lingkungan/Sumber Air (Numerik)',num:true},{k:'proteksiAparDamkar_kebutuhan',l:'APAR/Mobil/Motor Damkar (Kebutuhan)',num:true},{k:'proteksiAparDamkar_numerik',l:'APAR/Mobil/Motor Damkar (Numerik)',num:true}]};
+const el={searchInput:document.getElementById('searchInput'),kecamatanFilter:document.getElementById('kecamatanFilter'),desaFilter:document.getElementById('desaFilter'),kewenanganFilter:document.getElementById('kewenanganFilter'),pageSizeSelect:document.getElementById('pageSizeSelect'),tableBody:document.getElementById('tableBody'),tableHeadRow:document.getElementById('tableHeadRow'),reloadBtn:document.getElementById('reloadBtn'),resetFilterBtn:document.getElementById('resetFilterBtn'),exportExcelBtn:document.getElementById('exportExcelBtn'),exportPdfBtn:document.getElementById('exportPdfBtn'),resultInfo:document.getElementById('resultInfo'),resultInfoBottom:document.getElementById('resultInfoBottom'),pageInfo:document.getElementById('pageInfo'),pageInfoBottom:document.getElementById('pageInfoBottom'),paginationTop:document.getElementById('paginationTop'),paginationBottom:document.getElementById('paginationBottom'),prevBtn:document.getElementById('prevBtn'),prevBtnBottom:document.getElementById('prevBtnBottom'),nextBtn:document.getElementById('nextBtn'),nextBtnBottom:document.getElementById('nextBtnBottom'),totalData:document.getElementById('totalData'),totalKecamatan:document.getElementById('totalKecamatan'),totalDesa:document.getElementById('totalDesa'),totalKampung:document.getElementById('totalKampung'),avgBobot:document.getElementById('avgBobot'),sumLuas:document.getElementById('sumLuas'),sourcePathLabel:document.getElementById('sourcePathLabel'),lastUpdatedLabel:document.getElementById('lastUpdatedLabel'),narrativeText:document.getElementById('narrativeText'),summaryToggleBtn:document.getElementById('summaryToggleBtn'),narrativePanel:document.getElementById('narrativePanel'),top10Panel:document.getElementById('top10Panel'),topLuasList:document.getElementById('topLuasList'),topLokasiList:document.getElementById('topLokasiList'),topBobotList:document.getElementById('topBobotList'),copySummaryBtn:document.getElementById('copySummaryBtn'),copyTop10Btn:document.getElementById('copyTop10Btn'),copyAllBtn:document.getElementById('copyAllBtn'),sectorTabs:document.getElementById('sectorTabs'),rekapGrid:document.getElementById('rekapGrid'),detailModal:document.getElementById('detailModal'),detailContent:document.getElementById('detailContent'),closeDetailBtn:document.getElementById('closeDetailBtn')};
+function parseNumber(v){return Number(String(v??'0').replace(',','.'))||0} function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function readField(cols,idx,cands){for(const c of cands){if(idx[c]!==undefined) return (cols[idx[c]]||'').trim();}return ''}
+function parseCsv(txt){const lines=txt.trim().split(/\r?\n/);const headers=lines[0].split(',').map(h=>h.trim());const idx=Object.fromEntries(headers.map((h,i)=>[h,i]));const map=(...c)=>readField([],idx,c);
+return lines.slice(1).filter(Boolean).map(line=>{const cols=line.split(','); const get=(...c)=>readField(cols,idx,c);const row={rt_rw:get('RT/RW','rt_rw'),kampung:get('KAMPUNG','kampung'),desa:get('DESA','desa'),kecamatan:get('KECAMATAN','kecamatan'),luas_ha:get('LUAS (Ha)','luas_ha'),kewenangan:get('KEWENANGAN','kewenangan'),bobot_kumuh:get('Bobot Kumuh','bobot_kumuh'),tingkat_kekumuhan_awal:get('Tingkat Kekumuhan Awal','tingkat_kekumuhan_awal'),pembagian_kawasan_kumuh:get('Pembagian Kawasan Kumuh','pembagian_kawasan_kumuh')};
+for(const [k,v] of Object.entries(TECH_FIELDS)){row[k+'_kebutuhan']=get(...v.labels.map(l=>`${l} Kebutuhan`),...v.keys.map(b=>`${b}_kebutuhan`)); row[k+'_numerik']=get(...v.labels.map(l=>`${l} Numerik`),...v.keys.map(b=>`${b}_numerik`));}
+return row;});}
+function getSummary(data){const b=data.reduce((a,r)=>a+parseNumber(r.bobot_kumuh),0), l=data.reduce((a,r)=>a+parseNumber(r.luas_ha),0); return {lokasi:data.length,kecamatan:new Set(data.map(r=>r.kecamatan).filter(Boolean)).size,desa:new Set(data.map(r=>r.desa).filter(Boolean)).size,kampung:new Set(data.map(r=>r.kampung).filter(Boolean)).size,avgBobot:data.length?b/data.length:0,totalLuas:l};}
+function renderStats(){const s=getSummary(state.filtered); el.totalData.textContent=integerFormat.format(s.lokasi);el.totalKecamatan.textContent=integerFormat.format(s.kecamatan);el.totalDesa.textContent=integerFormat.format(s.desa);el.totalKampung.textContent=integerFormat.format(s.kampung);el.avgBobot.textContent=s.lokasi?avgBobotFormat.format(s.avgBobot):'0';el.sumLuas.textContent=s.lokasi?`${totalLuasFormat.format(s.totalLuas)} Ha`:'0';}
+function renderNarrative(){const s=getSummary(state.filtered); if(!s.lokasi){el.narrativeText.textContent='Tidak ditemukan data sesuai filter yang dipilih.';return;} const total=`${totalLuasFormat.format(s.totalLuas)} Ha`; const avg=avgBobotFormat.format(s.avgBobot); el.narrativeText.textContent=el.kecamatanFilter.value?`Pada Kecamatan ${el.kecamatanFilter.value}, terdapat ${integerFormat.format(s.lokasi)} lokasi kawasan permukiman kumuh yang tersebar di ${integerFormat.format(s.desa)} desa, dengan total luas ${total} dan rata-rata bobot ${avg}.`:`Berdasarkan data yang tersedia, terdapat ${integerFormat.format(s.lokasi)} lokasi kawasan permukiman kumuh yang tersebar di ${integerFormat.format(s.kecamatan)} kecamatan dan ${integerFormat.format(s.desa)} desa, dengan total luas ${total} dan rata-rata bobot ${avg}.`;}
+function renderFilters(){const kec=[...new Set(state.rawData.map(d=>d.kecamatan).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));const kew=[...new Set(state.rawData.map(d=>d.kewenangan).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));el.kecamatanFilter.innerHTML='<option value="">Semua Kecamatan</option>'+kec.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');el.kewenanganFilter.innerHTML='<option value="">Semua Kewenangan</option>'+kew.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');renderDesaFilter('');}
+function renderDesaFilter(sel=el.desaFilter.value){const src=el.kecamatanFilter.value?state.rawData.filter(d=>d.kecamatan===el.kecamatanFilter.value):state.rawData;const desa=[...new Set(src.map(d=>d.desa).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));el.desaFilter.innerHTML='<option value="">Semua Desa</option>'+desa.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');el.desaFilter.value=desa.includes(sel)?sel:'';}
+function applySorting(data){if(!state.sortKey)return [...data];const num=['luas_ha','bobot_kumuh'];return [...data].sort((a,b)=>{const l=num.includes(state.sortKey)?parseNumber(a[state.sortKey]):String(a[state.sortKey]||'').toLowerCase();const r=num.includes(state.sortKey)?parseNumber(b[state.sortKey]):String(b[state.sortKey]||'').toLowerCase();if(l<r)return state.sortDir==='asc'?-1:1;if(l>r)return state.sortDir==='asc'?1:-1;return 0;});}
+function applyFilters(){const q=el.searchInput.value.toLowerCase().trim(),k=el.kecamatanFilter.value,d=el.desaFilter.value,kw=el.kewenanganFilter.value;const f=state.rawData.filter(r=>{const s=`${r.rt_rw} ${r.kampung} ${r.desa} ${r.kecamatan} ${r.kewenangan} ${r.bobot_kumuh} ${r.luas_ha} ${r.tingkat_kekumuhan_awal} ${r.pembagian_kawasan_kumuh}`.toLowerCase();return (!q||s.includes(q))&&(!k||r.kecamatan===k)&&(!d||r.desa===d)&&(!kw||r.kewenangan===kw)});state.filtered=applySorting(f);state.page=1;renderDashboard();}
+function renderSortIndicators(){}
+function getPageSize(){return state.pageSize==='all'?state.filtered.length||1:Number(state.pageSize)}
+function renderSectorTabs(){el.sectorTabs.innerHTML=SECTOR_TABS.map(t=>`<button class="sector-tab ${state.activeSector===t.key?'active':''}" data-sector="${t.key}">${t.label}</button>`).join('');el.sectorTabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{state.activeSector=b.dataset.sector;renderTable();renderSectorTabs();}));}
+function valForRow(r,k){if(k==='aksi') return `<button class="secondary-btn detail-btn" data-rt="${escapeHtml(r.rt_rw)}" data-kec="${escapeHtml(r.kecamatan)}">Detail</button>`; if(k.endsWith('_kebutuhan')||k.endsWith('_numerik')) return decimalFormat.format(parseNumber(r[k]||0)); if(k==='luas_ha') return `${decimalFormat.format(parseNumber(r[k]))} Ha`; if(k==='bobot_kumuh') return avgBobotFormat.format(parseNumber(r[k])); return escapeHtml(r[k]||'');}
+function renderTable(){const cols=SECTOR_COLUMNS[state.activeSector]||SECTOR_COLUMNS.ringkasan;el.tableHeadRow.innerHTML=cols.map(c=>`<th>${c.l}</th>`).join('');const total=state.filtered.length,showAll=state.pageSize==='all',ps=getPageSize(),tp=showAll?1:Math.max(1,Math.ceil(total/ps));if(state.page>tp)state.page=tp;const start=showAll?0:(state.page-1)*ps,end=showAll?total:Math.min(start+ps,total),rows=state.filtered.slice(start,end);el.tableBody.innerHTML=rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.num?'num':''} ${c.center?'center':''}">${valForRow(r,c.k)}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="20">Data tidak ditemukan.</td></tr>';const info=`Menampilkan ${total===0?0:start+1}-${end} dari ${integerFormat.format(total)} data`;el.resultInfo.textContent=info;el.resultInfoBottom.textContent=info;el.pageInfo.textContent=`Hal ${state.page}/${tp}`;el.pageInfoBottom.textContent=`Hal ${state.page}/${tp}`;const hide=total===0||showAll;el.paginationTop.classList.toggle('is-hidden',hide);el.paginationBottom.classList.toggle('is-hidden',hide);el.prevBtn.disabled=state.page<=1||hide;el.prevBtnBottom.disabled=state.page<=1||hide;el.nextBtn.disabled=state.page>=tp||hide;el.nextBtnBottom.disabled=state.page>=tp||hide;el.tableBody.querySelectorAll('.detail-btn').forEach(btn=>btn.addEventListener('click',()=>{const row=state.filtered.find(r=>r.rt_rw===btn.dataset.rt&&r.kecamatan===btn.dataset.kec);if(row)showDetail(row);}));}
+function agg(data){const m=new Map();data.forEach(r=>{const k=r.kecamatan||'-';if(!m.has(k))m.set(k,{name:k,lokasi:0,totalLuas:0,totalBobot:0});const x=m.get(k);x.lokasi++;x.totalLuas+=parseNumber(r.luas_ha);x.totalBobot+=parseNumber(r.bobot_kumuh);});return [...m.values()].map(v=>({...v,avgBobot:v.lokasi?v.totalBobot/v.lokasi:0}));}
+function renderTopList(t,items,f){t.innerHTML=items.length?items.slice(0,10).map(i=>`<li><strong>${escapeHtml(i.name)}</strong> — ${f(i)}</li>`).join(''):'<li>Data tidak tersedia.</li>'}
+function renderTopKecamatan(){const g=agg(state.filtered);renderTopList(el.topLuasList,[...g].sort((a,b)=>b.totalLuas-a.totalLuas),i=>`${totalLuasFormat.format(i.totalLuas)} Ha`);renderTopList(el.topLokasiList,[...g].sort((a,b)=>b.lokasi-a.lokasi),i=>`${integerFormat.format(i.lokasi)} lokasi`);renderTopList(el.topBobotList,[...g].sort((a,b)=>b.avgBobot-a.avgBobot),i=>`rata-rata bobot ${avgBobotFormat.format(i.avgBobot)}`)}
+function rekapValue(rows,key,suf){return rows.reduce((a,r)=>a+parseNumber(r[`${key}_${suf}`]||0),0)}
+function renderRekap(){const items=[['Total Jalan Lingkungan Bangunan','jalanLingkunganBangunan'],['Total Relokasi','relokasi'],['Total RTLH','rtlh'],['Total Jalan Baru','jalanBaru'],['Total Jalan Rusak','jalanRusak'],['Total SAB Akses','sabAkses'],['Total SAB Kebutuhan','sabKebutuhan'],['Total Drainase Limpasan','drainaseLimpasan'],['Total Drainase Baru','drainaseBaru'],['Total Drainase Rusak','drainaseRusak'],['Total Septictank Komunal','septictankKomunal'],['Total Jamban Pribadi','jambanPribadi'],['Total TPS/TPST','tpsTpst'],['Total TPS3R/Bank Sampah','tps3rBank'],['Total Proteksi Jalan Lingkungan/Sumber Air','proteksiJalanSumberAir'],['Total Proteksi APAR/Mobil/Motor Damkar','proteksiAparDamkar']]; el.rekapGrid.innerHTML=items.map(([label,key])=>`<div class="rekap-item"><strong>${label}</strong><div>Kebutuhan: ${decimalFormat.format(rekapValue(state.filtered,key,'kebutuhan'))}</div><div>Numerik: ${decimalFormat.format(rekapValue(state.filtered,key,'numerik'))}</div></div>`).join('');}
+function renderDashboard(){renderStats();renderNarrative();renderTopKecamatan();renderRekap();renderSectorTabs();renderTable();}
+function toggleSummaryPanels(){state.summaryVisible=!state.summaryVisible;el.narrativePanel.classList.toggle('is-hidden',!state.summaryVisible);el.top10Panel.classList.toggle('is-hidden',!state.summaryVisible);el.summaryToggleBtn.textContent=state.summaryVisible?'Sembunyikan Ringkasan & Top 10':'Tampilkan Ringkasan & Top 10';}
+async function copyTextWithFeedback(button,text){if(!text.trim())return;try{await navigator.clipboard.writeText(text);}catch(_){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}const o=button.textContent;button.textContent='Tersalin';setTimeout(()=>button.textContent=o,1200)}
+function buildTop10Text(){const pick=list=>[...list.querySelectorAll('li')].map(li=>li.textContent.trim()).join('\n');return ['Top 10 Kecamatan Berdasarkan Total Luas Kumuh',pick(el.topLuasList),'','Top 10 Kecamatan Berdasarkan Jumlah Lokasi',pick(el.topLokasiList),'','Top 10 Kecamatan Berdasarkan Rata-rata Bobot',pick(el.topBobotList)].join('\n')}
+function showDetail(r){const sec=(title,arr)=>`<h3>${title}</h3><table><tbody>${arr.map(([n,k])=>`<tr><td>${n}</td><td class="num">${decimalFormat.format(parseNumber(r[k+'_kebutuhan']||0))}</td><td class="num">${decimalFormat.format(parseNumber(r[k+'_numerik']||0))}</td></tr>`).join('')}</tbody></table>`;el.detailContent.innerHTML=`<div class="detail-grid"><div><strong>Kecamatan</strong><div>${escapeHtml(r.kecamatan)}</div></div><div><strong>Desa</strong><div>${escapeHtml(r.desa)}</div></div><div><strong>Kampung</strong><div>${escapeHtml(r.kampung)}</div></div><div><strong>RT/RW</strong><div>${escapeHtml(r.rt_rw)}</div></div><div><strong>Luas</strong><div>${decimalFormat.format(parseNumber(r.luas_ha))} Ha</div></div><div><strong>Kewenangan</strong><div>${escapeHtml(r.kewenangan)}</div></div><div><strong>Bobot Kumuh</strong><div>${avgBobotFormat.format(parseNumber(r.bobot_kumuh))}</div></div><div><strong>Tingkat Kekumuhan Awal</strong><div>${escapeHtml(r.tingkat_kekumuhan_awal||'')}</div></div><div><strong>Pembagian Kawasan Kumuh</strong><div>${escapeHtml(r.pembagian_kawasan_kumuh||'')}</div></div></div>${sec('Bangunan',[['Jalan Lingkungan','jalanLingkunganBangunan'],['Relokasi','relokasi'],['RTLH','rtlh']])}${sec('Jalan Lingkungan',[['Jalan Baru','jalanBaru'],['Jalan Rusak','jalanRusak']])}${sec('Air Minum',[['SAB Akses','sabAkses'],['SAB Kebutuhan','sabKebutuhan']])}${sec('Drainase Lingkungan',[['Drainase Limpasan','drainaseLimpasan'],['Drainase Baru','drainaseBaru'],['Drainase Rusak','drainaseRusak']])}${sec('Sanitasi',[['Septictank Komunal','septictankKomunal'],['Jamban Pribadi','jambanPribadi']])}${sec('Persampahan',[['TPS/TPST','tpsTpst'],['TPS3R/Bank Sampah','tps3rBank']])}${sec('Proteksi Kebakaran',[['Jalan Lingkungan/Sumber Air','proteksiJalanSumberAir'],['APAR/Mobil/Motor Damkar','proteksiAparDamkar']])}`;el.detailModal.classList.remove('is-hidden');}
+function closeDetail(){el.detailModal.classList.add('is-hidden')}
+function goToPage(d){const tp=state.pageSize==='all'?1:Math.max(1,Math.ceil(state.filtered.length/getPageSize()));state.page=Math.min(Math.max(1,state.page+d),tp);renderTable()}
+function handleSort(key){if(state.sortKey===key){state.sortDir=state.sortDir==='asc'?'desc':'asc'}else{state.sortKey=key;state.sortDir=['luas_ha','bobot_kumuh'].includes(key)?'desc':'asc'}state.filtered=applySorting(state.filtered);state.page=1;renderDashboard()}
+function isFiltered(){return Boolean(el.searchInput.value.trim()||el.kecamatanFilter.value||el.desaFilter.value||el.kewenanganFilter.value)}
+function exportRows(){return state.filtered.map(r=>({ 'RT/RW':r.rt_rw,'KAMPUNG':r.kampung,'DESA':r.desa,'KECAMATAN':r.kecamatan,'LUAS (Ha)':decimalFormat.format(parseNumber(r.luas_ha)),'KEWENANGAN':r.kewenangan,'Bobot Kumuh':avgBobotFormat.format(parseNumber(r.bobot_kumuh)),'Tingkat Kekumuhan Awal':r.tingkat_kekumuhan_awal||'','Pembagian Kawasan Kumuh':r.pembagian_kawasan_kumuh||'',...Object.fromEntries(Object.keys(TECH_FIELDS).flatMap(k=>[[`${k}_kebutuhan`,decimalFormat.format(parseNumber(r[k+'_kebutuhan']||0))],[`${k}_numerik`,decimalFormat.format(parseNumber(r[k+'_numerik']||0))]]))}))}
+function exportExcel(){if(!window.XLSX){alert('Library export Excel belum berhasil dimuat.');return;}const ws=XLSX.utils.json_to_sheet(exportRows());const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Data Kawasan Kumuh');XLSX.writeFile(wb,isFiltered()?'data-kawasan-kumuh-filtered.xlsx':'data-kawasan-kumuh.xlsx')}
+function exportPdf(){if(!window.jspdf||!window.jspdf.jsPDF){alert('Library export PDF belum berhasil dimuat.');return;}const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});const s=getSummary(state.filtered);doc.setFontSize(14);doc.text('Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang',14,14);doc.setFontSize(10);doc.text(`Total Lokasi: ${integerFormat.format(s.lokasi)}`,14,24);doc.text(`Total Kecamatan: ${integerFormat.format(s.kecamatan)}`,70,24);doc.text(`Total Desa: ${integerFormat.format(s.desa)}`,130,24);doc.text(`Total Kampung: ${integerFormat.format(s.kampung)}`,180,24);doc.text(`Rata-rata Bobot: ${s.lokasi?avgBobotFormat.format(s.avgBobot):'0'}`,14,31);doc.text(`Total Luas: ${s.lokasi?totalLuasFormat.format(s.totalLuas):'0'} Ha`,90,31);const cols=SECTOR_COLUMNS.ringkasan.filter(c=>c.k!=='aksi');doc.autoTable({startY:38,head:[cols.map(c=>c.l)],body:state.filtered.map(r=>cols.map(c=>c.k==='luas_ha'?`${decimalFormat.format(parseNumber(r[c.k]))} Ha`:c.k==='bobot_kumuh'?avgBobotFormat.format(parseNumber(r[c.k])):(r[c.k]||''))),styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[15,118,110]}});doc.save(isFiltered()?'data-kawasan-kumuh-filtered.pdf':'data-kawasan-kumuh.pdf')}
+function resetFilters(){el.searchInput.value='';el.kecamatanFilter.value='';renderDesaFilter('');el.kewenanganFilter.value='';state.page=1;applyFilters()}
+async function loadData(){let loaded=null,last='';for(const p of CSV_PATHS){try{const r=await fetch(p);if(r.ok){loaded=await r.text();last=r.headers.get('Last-Modified')||'';break}}catch(_){}}if(!loaded){el.tableBody.innerHTML='<tr><td colspan="20">Gagal memuat CSV.</td></tr>';return;}const sk=el.kecamatanFilter.value,sd=el.desaFilter.value,sw=el.kewenanganFilter.value;state.rawData=parseCsv(loaded);el.sourcePathLabel.textContent=DISPLAY_CSV_PATH;el.lastUpdatedLabel.textContent=last?`Data terakhir diperbarui: ${new Date(last).toLocaleString('id-ID')}`:'Data terakhir diperbarui: -';renderFilters();el.kecamatanFilter.value=[...el.kecamatanFilter.options].some(o=>o.value===sk)?sk:'';renderDesaFilter(sd);el.kewenanganFilter.value=[...el.kewenanganFilter.options].some(o=>o.value===sw)?sw:'';applyFilters();}
+el.searchInput.addEventListener('input',applyFilters);el.kecamatanFilter.addEventListener('change',()=>{renderDesaFilter('');applyFilters()});el.desaFilter.addEventListener('change',applyFilters);el.kewenanganFilter.addEventListener('change',applyFilters);el.pageSizeSelect.addEventListener('change',()=>{state.pageSize=el.pageSizeSelect.value==='all'?'all':Number(el.pageSizeSelect.value);state.page=1;renderDashboard()});el.prevBtn.addEventListener('click',()=>goToPage(-1));el.prevBtnBottom.addEventListener('click',()=>goToPage(-1));el.nextBtn.addEventListener('click',()=>goToPage(1));el.nextBtnBottom.addEventListener('click',()=>goToPage(1));el.resetFilterBtn.addEventListener('click',resetFilters);el.summaryToggleBtn.addEventListener('click',toggleSummaryPanels);el.reloadBtn.addEventListener('click',loadData);el.exportExcelBtn.addEventListener('click',exportExcel);el.exportPdfBtn.addEventListener('click',exportPdf);el.copySummaryBtn.addEventListener('click',()=>copyTextWithFeedback(el.copySummaryBtn,el.narrativeText.textContent));el.copyTop10Btn.addEventListener('click',()=>copyTextWithFeedback(el.copyTop10Btn,buildTop10Text()));el.copyAllBtn.addEventListener('click',()=>copyTextWithFeedback(el.copyAllBtn,`${el.narrativeText.textContent}\n\n${buildTop10Text()}`));el.closeDetailBtn.addEventListener('click',closeDetail);el.detailModal.addEventListener('click',e=>{if(e.target===el.detailModal)closeDetail()});
+loadData();
+</script></body></html>
