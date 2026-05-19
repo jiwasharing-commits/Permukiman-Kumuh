@@ -68,6 +68,10 @@
     .detail-grid { display:grid; grid-template-columns: repeat(2, minmax(200px, 1fr)); gap:8px 14px; margin-bottom:12px; }
     .rekap-grid { display:grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap:10px; }
     .rekap-item { background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; font-size:13px; }
+    .rekap-group { border:1px solid #dbe4ef; border-radius:12px; padding:10px; background:#f8fafc; }
+    .rekap-group h3 { margin:0 0 8px; font-size:14px; color:#0f766e; }
+    .rekap-list { margin:0; padding-left:18px; display:grid; gap:6px; }
+    .rekap-list li { color:#334155; font-size:13px; }
     @media (max-width: 960px) { .analysis-grid,.rekap-grid { grid-template-columns:1fr; } .cards { grid-template-columns: repeat(2, minmax(160px, 1fr)); } }
     @media (max-width: 640px) {
       .container { padding: 18px 12px 28px; }
@@ -129,8 +133,47 @@ function renderTable(){const cols=SECTOR_COLUMNS[state.activeSector]||SECTOR_COL
 function agg(data){const m=new Map();data.forEach(r=>{const k=r.kecamatan||'-';if(!m.has(k))m.set(k,{name:k,lokasi:0,totalLuas:0,totalBobot:0});const x=m.get(k);x.lokasi++;x.totalLuas+=parseNumber(r.luas_ha);x.totalBobot+=parseNumber(r.bobot_kumuh);});return [...m.values()].map(v=>({...v,avgBobot:v.lokasi?v.totalBobot/v.lokasi:0}));}
 function renderTopList(t,items,f){t.innerHTML=items.length?items.slice(0,10).map(i=>`<li><strong>${escapeHtml(i.name)}</strong> — ${f(i)}</li>`).join(''):'<li>Data tidak tersedia.</li>'}
 function renderTopKecamatan(){const g=agg(state.filtered);renderTopList(el.topLuasList,[...g].sort((a,b)=>b.totalLuas-a.totalLuas),i=>`${totalLuasFormat.format(i.totalLuas)} Ha`);renderTopList(el.topLokasiList,[...g].sort((a,b)=>b.lokasi-a.lokasi),i=>`${integerFormat.format(i.lokasi)} lokasi`);renderTopList(el.topBobotList,[...g].sort((a,b)=>b.avgBobot-a.avgBobot),i=>`rata-rata bobot ${avgBobotFormat.format(i.avgBobot)}`)}
-function rekapValue(rows,key,suf){return rows.reduce((a,r)=>a+parseNumber(r[`${key}_${suf}`]||0),0)}
-function renderRekap(){const items=[['Total Jalan Lingkungan Bangunan','jalanLingkunganBangunan'],['Total Relokasi','relokasi'],['Total RTLH','rtlh'],['Total Jalan Baru','jalanBaru'],['Total Jalan Rusak','jalanRusak'],['Total SAB Akses','sabAkses'],['Total SAB Kebutuhan','sabKebutuhan'],['Total Drainase Limpasan','drainaseLimpasan'],['Total Drainase Baru','drainaseBaru'],['Total Drainase Rusak','drainaseRusak'],['Total Septictank Komunal','septictankKomunal'],['Total Jamban Pribadi','jambanPribadi'],['Total TPS/TPST','tpsTpst'],['Total TPS3R/Bank Sampah','tps3rBank'],['Total Proteksi Jalan Lingkungan/Sumber Air','proteksiJalanSumberAir'],['Total Proteksi APAR/Mobil/Motor Damkar','proteksiAparDamkar']]; el.rekapGrid.innerHTML=items.map(([label,key])=>`<div class="rekap-item"><strong>${label}</strong><div>Kebutuhan: ${formatUnitValue(rekapValue(state.filtered,key,'kebutuhan'),UNIT_MAP[key]||'')}</div><div>Numerik: ${formatUnitValue(rekapValue(state.filtered,key,'numerik'),UNIT_MAP[key]||'')}</div></div>`).join('');}
+function rekapValue(rows,key){return rows.reduce((a,r)=>a+parseNumber(r[`${key}_kebutuhan`]||0),0)}
+function countNeed(rows,key){return rows.filter(r=>parseNumber(r[`${key}_kebutuhan`])>0).length}
+function formatRekapValue(value,unit){if(unit==='Ha')return `${decimalFormat.format(parseNumber(value))} ${unit}`;return formatUnitValue(value,unit)}
+function renderRekap(){
+  const groups=[
+    {title:'Bangunan Gedung',items:[
+      {label:'Rumah Belum Terlayani Akses Jalan Lingkungan',value:rekapValue(state.filtered,'jalanLingkunganBangunan'),unit:'Rumah'},
+      {label:'Rumah Perlu Relokasi',value:rekapValue(state.filtered,'relokasi'),unit:'Rumah'},
+      {label:'Rumah Tidak Layak Huni',value:rekapValue(state.filtered,'rtlh'),unit:'Rumah'}
+    ]},
+    {title:'Jalan Lingkungan',items:[
+      {label:'Kebutuhan Jalan Baru',value:rekapValue(state.filtered,'jalanBaru'),unit:'m'},
+      {label:'Jalan Lingkungan Rusak',value:rekapValue(state.filtered,'jalanRusak'),unit:'m'}
+    ]},
+    {title:'Penyediaan Air Minum',items:[
+      {label:'KK Belum Terlayani Akses Air Minum',value:rekapValue(state.filtered,'sabAkses'),unit:'KK'},
+      {label:'KK dengan Kebutuhan Air Minum Belum Tercukupi',value:rekapValue(state.filtered,'sabKebutuhan'),unit:'KK'}
+    ]},
+    {title:'Drainase Lingkungan',items:[
+      {label:'Area Genangan/Limpasan Drainase',value:rekapValue(state.filtered,'drainaseLimpasan'),unit:'Ha'},
+      {label:'Kebutuhan Drainase Baru',value:rekapValue(state.filtered,'drainaseBaru'),unit:'m'},
+      {label:'Drainase Rusak',value:rekapValue(state.filtered,'drainaseRusak'),unit:'m'}
+    ]},
+    {title:'Pengelolaan Air Limbah',items:[
+      {label:'Kebutuhan Sistem Sanitasi Komunal',value:rekapValue(state.filtered,'septictankKomunal'),unit:'KK'},
+      {label:'KK Belum Memiliki Jamban Pribadi',value:rekapValue(state.filtered,'jambanPribadi'),unit:'KK'}
+    ]},
+    {title:'Pengelolaan Persampahan',items:[
+      {label:'KK Belum Terlayani TPS/TPST',value:rekapValue(state.filtered,'tpsTpst'),unit:'KK'},
+      {label:'Estimasi Kebutuhan TPS/TPST',value:countNeed(state.filtered,'tpsTpst'),unit:'Unit/lokasi'},
+      {label:'KK Belum Terlayani TPS3R/Bank Sampah',value:rekapValue(state.filtered,'tps3rBank'),unit:'KK'},
+      {label:'Lokasi Membutuhkan TPS3R/Bank Sampah',value:countNeed(state.filtered,'tps3rBank'),unit:'RT/lokasi'}
+    ]},
+    {title:'Proteksi Kebakaran',items:[
+      {label:'KK Belum Terlayani Akses Proteksi Kebakaran',value:rekapValue(state.filtered,'proteksiJalanSumberAir'),unit:'KK'},
+      {label:'Kebutuhan Sarana Proteksi Kebakaran',value:rekapValue(state.filtered,'proteksiAparDamkar'),unit:'KK'},
+      {label:'Lokasi Membutuhkan Sarana Proteksi Kebakaran',value:countNeed(state.filtered,'proteksiAparDamkar'),unit:'RT/lokasi'}
+    ]}
+  ];
+  el.rekapGrid.innerHTML=groups.map(g=>`<div class="rekap-group"><h3>${g.title}</h3><ul class="rekap-list">${g.items.map(it=>`<li><strong>${it.label}:</strong> ${formatRekapValue(it.value,it.unit)}</li>`).join('')}</ul></div>`).join('');
+}
 function renderDashboard(){renderStats();renderNarrative();renderTopKecamatan();renderRekap();renderSectorTabs();renderTable();}
 function toggleSummaryPanels(){state.summaryVisible=!state.summaryVisible;el.narrativePanel.classList.toggle('is-hidden',!state.summaryVisible);el.top10Panel.classList.toggle('is-hidden',!state.summaryVisible);el.summaryToggleBtn.textContent=state.summaryVisible?'Sembunyikan Ringkasan & Top 10':'Tampilkan Ringkasan & Top 10';}function toggleRekapPanel(){state.rekapVisible=!state.rekapVisible;el.rekapPanel.classList.toggle('is-hidden',!state.rekapVisible);el.rekapToggleBtn.textContent=state.rekapVisible?'Sembunyikan Rekap Infrastruktur':'Tampilkan Rekap Infrastruktur';}
 async function copyTextWithFeedback(button,text){if(!text.trim())return;try{await navigator.clipboard.writeText(text);}catch(_){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}const o=button.textContent;button.textContent='Tersalin';setTimeout(()=>button.textContent=o,1200)}
