@@ -41,14 +41,17 @@
     th.sortable:hover { background: #115e59; }
     tbody tr:nth-child(even) { background: #f8fafc; }
     .filter { margin: 0 0 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .controls-block{display:grid; gap:8px; margin-bottom:8px;}
-    .filter-row input{flex:2.2 1 340px;}
-    .filter-row select{flex:1 1 165px;}
-    .filter-row #kawasanFilter{flex:1.4 1 230px;}
-    .filter-row #pageSizeSelect{flex:0 1 130px;}
-    .actions-row button{min-width:120px; padding:7px 10px; font-size:13px;}
+    .controls-block{display:grid; gap:10px; margin-bottom:10px; max-width:100%;}
+    .control-filter-grid{display:grid; grid-template-columns:minmax(260px,1.4fr) repeat(3,minmax(150px,.7fr)) minmax(190px,.9fr) minmax(130px,.5fr); gap:8px; align-items:center; width:100%;}
+    .control-action-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center;}
+    .aspect-tabs-scroll{display:flex; overflow-x:auto; overflow-y:hidden; max-width:100%; padding-bottom:4px; scrollbar-width:thin; -webkit-overflow-scrolling:touch;}
+
+
+
+
+    .control-action-row button{min-width:120px; padding:8px 12px; font-size:13px; min-height:36px;}
     .summary-actions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
-    .sector-tabs-wrap{overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; padding-bottom:2px;}
+    .sector-tabs-wrap{max-width:100%;}
     .sector-tabs{display:flex; gap:8px; flex-wrap:nowrap; margin:0; min-width:max-content;}
     .popup-modal{position:fixed; inset:0; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1260;}
     .popup-modal.is-hidden{display:none !important;}
@@ -79,7 +82,7 @@
     .map-note { margin:10px 0 0; color:#475569; font-size:13px; }
     .center { text-align: center; }
     .sector-tabs { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
-    .sector-tab { background:#e2e8f0; color:#334155; font-size:13px; padding:8px 10px; min-height:34px; white-space:nowrap; }
+    .sector-tab { background:#e2e8f0; color:#334155; font-size:13px; padding:8px 10px; min-height:34px; white-space:nowrap; flex:0 0 auto; }
     .sector-tab.active { background:#0f766e; color:white; }
     .detail-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1000; } .detail-modal.is-hidden { display: none !important; }
     .detail-card { width:min(900px,100%); max-height:90vh; overflow:auto; background:white; border-radius:14px; padding:16px; }
@@ -92,11 +95,11 @@
     .rekap-list li { color:#334155; font-size:13px; }
     @media (max-width: 960px) { .analysis-grid,.rekap-grid { grid-template-columns:1fr; } .cards { grid-template-columns: repeat(2, minmax(160px, 1fr)); } }
     @media (max-width: 640px) {
-      .actions-row button{min-width:calc(50% - 4px);}
-      .filter-row input{flex:1 1 100%;}
-      .filter-row select{flex:1 1 calc(50% - 4px);}
-      .filter-row #kawasanFilter{flex:1 1 100%;}
-      .filter-row #pageSizeSelect{flex:1 1 calc(50% - 4px);}
+      .control-filter-grid{grid-template-columns:1fr 1fr;}
+      .control-filter-grid input{grid-column:1 / -1;}
+      .control-filter-grid #kawasanFilter{grid-column:1 / -1;}
+      .control-action-row button{min-width:calc(50% - 4px);}
+      .aspect-tabs-scroll{padding-bottom:2px;}
       .sector-tabs{flex-wrap:nowrap; min-width:max-content;}
       .container { padding: 18px 12px 28px; }
       .cards { display:flex; overflow-x:auto; padding-bottom:8px; }
@@ -114,7 +117,7 @@
   <div class="summary-actions"><button id="summaryToggleBtn" class="secondary-btn">Tampilkan Ringkasan & Top 10</button><button id="rekapToggleBtn" class="secondary-btn">Tampilkan Rekap Infrastruktur</button></div>
 
 
-    <section class="panel"><div class="controls-block"><div class="filter filter-row"><input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa, kecamatan..." /><select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select><select id="desaFilter"><option value="">Semua Desa</option></select><select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select><select id="kawasanFilter"><option value="">Semua Kawasan</option></select><select id="pageSizeSelect"><option value="25">25 / halaman</option><option value="50">50 / halaman</option><option value="100">100 / halaman</option><option value="200">200 / halaman</option><option value="300">300 / halaman</option><option value="all" selected>Semua muncul</option></select></div><div class="filter actions-row"><button id="resetFilterBtn" class="secondary-btn">Reset Filter</button><button id="reloadBtn">Muat Ulang Data</button><button id="exportExcelBtn" class="export-btn">Export Excel</button><button id="exportPdfBtn" class="export-btn">Export PDF</button><button id="openMapBtn" class="secondary-btn">Lihat Peta</button></div><div class="sector-tabs-wrap"><div id="sectorTabs" class="sector-tabs"></div></div></div>
+    <section class="panel"><div class="controls-block"><div class="control-filter-grid"><input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa, kecamatan..." /><select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select><select id="desaFilter"><option value="">Semua Desa</option></select><select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select><select id="kawasanFilter"><option value="">Semua Kawasan</option></select><select id="pageSizeSelect"><option value="25">25 / halaman</option><option value="50">50 / halaman</option><option value="100">100 / halaman</option><option value="200">200 / halaman</option><option value="300">300 / halaman</option><option value="all" selected>Semua muncul</option></select></div><div class="control-action-row"><button id="resetFilterBtn" class="secondary-btn">Reset Filter</button><button id="reloadBtn">Muat Ulang Data</button><button id="exportExcelBtn" class="export-btn">Export Excel</button><button id="exportPdfBtn" class="export-btn">Export PDF</button><button id="openMapBtn" class="secondary-btn">Lihat Peta</button></div><div class="sector-tabs-wrap aspect-tabs-scroll"><div id="sectorTabs" class="sector-tabs"></div></div></div>
     <div class="meta"><span id="resultInfo">Menampilkan 0 data</span><div id="paginationTop" class="pagination"><button id="prevBtn">Sebelumnya</button><span id="pageInfo">Hal 1/1</span><button id="nextBtn">Berikutnya</button></div></div>
     <div class="table-wrap"><table><thead><tr id="tableHeadRow"></tr></thead><tbody id="tableBody"></tbody></table></div>
     <div class="meta"><span id="resultInfoBottom">Menampilkan 0 data</span><div id="paginationBottom" class="pagination"><button id="prevBtnBottom">Sebelumnya</button><span id="pageInfoBottom">Hal 1/1</span><button id="nextBtnBottom">Berikutnya</button></div></div>
