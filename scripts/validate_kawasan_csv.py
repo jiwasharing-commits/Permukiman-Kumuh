@@ -2,29 +2,29 @@
 import csv
 from pathlib import Path
 
-SRC = Path('data/lokasi_kewenangan_kabupaten.csv')
-OUT = Path('data/lokasi_kewenangan_kabupaten.cleaned.csv')
-KEY_FIELDS = ['rt_rw','kampung','desa','kecamatan','luas_ha','kewenangan','bobot_kumuh']
+SRC = Path('data/sumber_data_baru.csv')
+EXPECTED_FIELDS = ['RT/RW', 'KAMPUNG', 'DESA', 'KECAMATAN', 'LUAS (Ha)', 'KEWENANGAN', 'Bobot Kumuh']
+KEY_FIELDS = EXPECTED_FIELDS
 
-with SRC.open(newline='', encoding='utf-8') as f:
-    rows = list(csv.DictReader(f))
+with SRC.open(newline='', encoding='utf-8-sig') as f:
+    reader = csv.DictReader(f)
+    rows = list(reader)
 
-cleaned, seen = [], set()
-for r in rows:
-    norm = {k:(r.get(k,'').strip()) for k in KEY_FIELDS}
-    key = tuple(norm[k] for k in KEY_FIELDS)
+headers = reader.fieldnames or []
+if headers != EXPECTED_FIELDS:
+    raise SystemExit(f'ERROR: header CSV tidak sesuai. Ditemukan={headers!r}; diharapkan={EXPECTED_FIELDS!r}')
+
+seen, duplicates = set(), 0
+for row in rows:
+    key = tuple((row.get(field) or '').strip() for field in KEY_FIELDS)
     if key in seen:
-        continue
-    seen.add(key)
-    cleaned.append(norm)
+        duplicates += 1
+    else:
+        seen.add(key)
 
-with OUT.open('w', newline='', encoding='utf-8') as f:
-    w = csv.DictWriter(f, fieldnames=KEY_FIELDS)
-    w.writeheader(); w.writerows(cleaned)
-
+print(f'source={SRC}')
 print(f'source_rows={len(rows)}')
-print(f'unique_rows={len(cleaned)}')
-print(f'duplicates_removed={len(rows)-len(cleaned)}')
-print(f'output={OUT}')
-if len(cleaned) != 602:
-    print('WARNING: unique_rows is not 602; please provide full source file if truncated.')
+print(f'unique_rows={len(seen)}')
+print(f'duplicates_found={duplicates}')
+if len(seen) != 602:
+    print('WARNING: unique_rows is not 602; please verify the source data completeness.')
