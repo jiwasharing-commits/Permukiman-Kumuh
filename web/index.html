@@ -3,173 +3,276 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Kawasan Kumuh</title>
+  <title>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fb; color: #1f2937; }
-    .cards { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
-    .card { background: white; padding: 14px; border-radius: 10px; box-shadow: 0 1px 5px rgba(0,0,0,.08); }
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
-    th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 10px; font-size: 14px; }
-    th { background: #0f766e; color: white; position: sticky; top: 0; }
-    .filter { margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap; }
-    input, select, button { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; }
-    button { background: #0f766e; color: white; border: none; cursor: pointer; }
-    .meta { display:flex; justify-content:space-between; align-items:center; margin:10px 0; font-size: 13px; color:#4b5563; }
+    :root { color-scheme: light; }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f3f6fb; color: #1f2937; overflow-x:hidden; }
+    .container { max-width: 1240px; margin: 0 auto; padding: 28px 24px 36px; }
+    .hero { background: linear-gradient(135deg, #0f766e, #115e59); color: white; padding: 24px; border-radius: 16px; box-shadow: 0 10px 28px rgba(15, 118, 110, .18); margin-bottom: 18px; }
+    .hero h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; }
+    .source-info { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #ecfeff; }
+    .source-info span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 6px 10px; }
+    .cards { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .08); border: 1px solid #e5e7eb; }
+    .card strong { display: block; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .card div { font-size: 23px; font-weight: 700; color: #0f766e; }
+    .card-clickable { cursor:pointer; transition: transform .15s ease, box-shadow .15s ease; }
+    .card-clickable:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(15,23,42,.12); }
+    .list-modal { position: fixed; inset: 0; background: rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1200; }
+    .list-modal.is-hidden { display:none !important; }
+    .list-card { width:min(760px,100%); max-height:86vh; overflow:auto; background:#fff; border-radius:14px; padding:14px; }
+    .list-scroll { max-height:58vh; overflow:auto; border:1px solid #e5e7eb; border-radius:10px; padding:10px; }
+    .panel { background: white; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .06); margin-bottom: 18px; }
+    .panel h2 { margin: 0 0 10px; font-size: 18px; color: #0f172a; }
+    .narrative { margin: 0; color: #334155; line-height: 1.6; }
+    .analysis-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
+    .analysis-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; background: #f8fafc; }
+    .analysis-card h3 { margin: 0 0 10px; font-size: 14px; color: #0f766e; }
+    .top-list { margin: 0; padding-left: 22px; color: #334155; font-size: 13px; line-height: 1.7; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 8px 8px; font-size: 13px; line-height: 1.35; white-space: normal; word-break: break-word; }
+    th { background: #0f766e; color: white; position: sticky; top: 0; z-index: 1; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; white-space: normal; line-height: 1.3; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: #115e59; }
+    tbody tr:nth-child(even) { background: #f8fafc; }
+    .filter { margin: 0 0 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .controls-block{display:grid; gap:10px; margin-bottom:10px; max-width:100%;}
+    .control-filter-grid{display:grid; grid-template-columns:minmax(260px,1.4fr) repeat(3,minmax(150px,.7fr)) minmax(190px,.9fr) minmax(130px,.5fr); gap:8px; align-items:center; width:100%;}
+    .control-action-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; align-items:center;}
+    .aspect-tabs-scroll{display:flex; overflow-x:visible; overflow-y:visible; max-width:100%; padding-bottom:0;}
+
+
+
+
+    .control-action-row button{min-width:120px; padding:8px 12px; font-size:13px; min-height:36px;}
+    .summary-actions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+    .sector-tabs-wrap{max-width:100%;}
+    .sector-tabs{display:flex; gap:6px; flex-wrap:nowrap; margin:0; min-width:0; width:100%; justify-content:space-between;}
+    .popup-modal{position:fixed; inset:0; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1260;}
+    .popup-modal.is-hidden{display:none !important;}
+    .popup-card{width:min(980px,100%); max-height:88vh; overflow:auto; background:#fff; border-radius:14px; padding:14px;}
+    input, select, button { padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 9px; font-size: 13px; line-height:1.2; min-height:36px; box-sizing:border-box; }
+    input { min-width: 280px; }
+    button { background: #0f766e; color: white; border: none; cursor: pointer; font-weight: 700; }
+    .secondary-btn { background: #e2e8f0; color: #334155; }
+    .export-btn { background: #1d4ed8; }
+    .meta { display:flex; justify-content:space-between; align-items:center; gap: 12px; margin:10px 0; font-size: 13px; color:#4b5563; flex-wrap: wrap; }
     .pagination { display:flex; gap:6px; align-items:center; }
     .pagination button[disabled] { background:#9ca3af; cursor:not-allowed; }
-    .table-wrap { max-height: 60vh; overflow: auto; border-radius: 10px; }
+    .pagination.is-hidden, .is-hidden { display: none; }
+    .summary-toggle { margin-bottom: 18px; }
+    .table-wrap { max-height: 60vh; overflow: auto; overflow-x: auto; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .col-id { width: 11%; }
+    .col-rt { width: 8%; white-space: nowrap; }
+    .col-num { width: 9%; }
+    .col-wide { width: 13%; }
+    .col-aksi { width: 7%; white-space: nowrap; }
+    .detail-sector th:nth-child(1), .detail-sector td:nth-child(1) { width: 50%; text-align: left; }
+    .detail-sector th:nth-child(2), .detail-sector td:nth-child(2), .detail-sector th:nth-child(3), .detail-sector td:nth-child(3) { width: 25%; text-align: right; white-space: nowrap; }
+    .map-modal { position: fixed; inset: 0; background: rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1100; }
+    .map-modal.is-hidden { display:none !important; }
+    .map-card { width:min(980px,100%); max-height:92vh; overflow:auto; background:#fff; border-radius:14px; padding:14px; }
+    #mapContainer { height: 58vh; min-height: 320px; border:1px solid #e5e7eb; border-radius:10px; }
+    .map-note { margin:10px 0 0; color:#475569; font-size:13px; }
+    .center { text-align: center; }
+    .sector-tabs { display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 12px; }
+    .sector-tab { background:#e2e8f0; color:#334155; font-size:12px; padding:7px 9px; min-height:34px; white-space:nowrap; flex:1 1 auto; text-align:center; }
+    .sector-tab.active { background:#0f766e; color:white; }
+    .detail-modal { position: fixed; inset: 0; background: rgba(15,23,42,.5); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1000; } .detail-modal.is-hidden { display: none !important; }
+    .detail-card { width:min(900px,100%); max-height:90vh; overflow:auto; background:white; border-radius:14px; padding:16px; }
+    .detail-grid { display:grid; grid-template-columns: repeat(2, minmax(200px, 1fr)); gap:8px 14px; margin-bottom:12px; }
+    .rekap-grid { display:grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap:10px; }
+    .rekap-item { background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:8px 10px; font-size:13px; }
+    .rekap-group { border:1px solid #dbe4ef; border-radius:12px; padding:10px; background:#f8fafc; }
+    .rekap-group h3 { margin:0 0 8px; font-size:14px; color:#0f766e; }
+    .rekap-list { margin:0; padding-left:18px; display:grid; gap:6px; }
+    .rekap-list li { color:#334155; font-size:13px; }
+    @media (max-width: 960px) { .analysis-grid,.rekap-grid { grid-template-columns:1fr; } .cards { grid-template-columns: repeat(2, minmax(160px, 1fr)); } }
+    @media (max-width: 640px) {
+      .control-filter-grid{grid-template-columns:1fr 1fr;}
+      .control-filter-grid input{grid-column:1 / -1;}
+      .control-filter-grid #kawasanFilter{grid-column:1 / -1;}
+      .control-action-row button{min-width:calc(50% - 4px);}
+      .aspect-tabs-scroll{padding-bottom:0;}
+      .sector-tabs{flex-wrap:nowrap; min-width:0; width:100%; justify-content:space-between;}
+      .container { padding: 18px 12px 28px; }
+      .cards { display:flex; overflow-x:auto; padding-bottom:8px; }
+      .card { flex: 0 0 170px; }
+      input, select, button { width: 100%; }
+      input { min-width: 100%; box-sizing: border-box; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1>Dashboard Kawasan Kumuh</h1>
-  <p>Tabel langsung tampil saat web dibuka. Data interaktif dari CSV.</p>
+<main class="container">
+  <header class="hero"><h1>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</h1><div class="source-info"><span>Sumber data: <strong id="sourcePathLabel">data/sumber_data_baru.csv</strong></span><span id="lastUpdatedLabel">Data terakhir diperbarui: -</span></div></header>
+  <section class="cards"><article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article><article class="card card-clickable" id="cardTotalKecamatan"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article><article class="card card-clickable" id="cardTotalDesa"><strong>Total Desa</strong><div id="totalDesa">0</div></article><article class="card card-clickable" id="cardTotalKampung"><strong>Total Kampung</strong><div id="totalKampung">0</div></article><article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article><article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article></section>
+  <div class="summary-actions"><button id="summaryToggleBtn" class="secondary-btn">Tampilkan Ringkasan & Top 10</button><button id="rekapToggleBtn" class="secondary-btn">Tampilkan Rekap Infrastruktur</button></div>
 
-  <section class="cards">
-    <article class="card"><strong>Total Data</strong><div id="totalData">0</div></article>
-    <article class="card"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article>
-    <article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article>
-    <article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article>
+
+    <section class="panel"><div class="controls-block"><div class="control-filter-grid"><input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa, kecamatan..." /><select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select><select id="desaFilter"><option value="">Semua Desa</option></select><select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select><select id="kawasanFilter"><option value="">Semua Kawasan</option></select><select id="pageSizeSelect"><option value="25">25 / halaman</option><option value="50">50 / halaman</option><option value="100">100 / halaman</option><option value="200">200 / halaman</option><option value="300">300 / halaman</option><option value="all" selected>Semua muncul</option></select></div><div class="control-action-row"><button id="resetFilterBtn" class="secondary-btn">Reset Filter</button><button id="reloadBtn">Muat Ulang Data</button><button id="exportExcelBtn" class="export-btn">Export Excel</button><button id="exportPdfBtn" class="export-btn">Export PDF</button><button id="openMapBtn" class="secondary-btn">Lihat Peta</button></div><div class="sector-tabs-wrap aspect-tabs-scroll"><div id="sectorTabs" class="sector-tabs"></div></div></div>
+    <div class="meta"><span id="resultInfo">Menampilkan 0 data</span><div id="paginationTop" class="pagination"><button id="prevBtn">Sebelumnya</button><span id="pageInfo">Hal 1/1</span><button id="nextBtn">Berikutnya</button></div></div>
+    <div class="table-wrap"><table><thead><tr id="tableHeadRow"></tr></thead><tbody id="tableBody"></tbody></table></div>
+    <div class="meta"><span id="resultInfoBottom">Menampilkan 0 data</span><div id="paginationBottom" class="pagination"><button id="prevBtnBottom">Sebelumnya</button><span id="pageInfoBottom">Hal 1/1</span><button id="nextBtnBottom">Berikutnya</button></div></div>
   </section>
+</main>
+<div id="summaryModal" class="popup-modal is-hidden"><div class="popup-card"><div class="meta"><h2 id="summaryModalTitle">Ringkasan & Top 10</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="summaryPopupCopyBtn" class="secondary-btn">Copy</button><button type="button" id="summaryPopupExcelBtn" class="secondary-btn">Export Excel</button><button type="button" id="summaryPopupPdfBtn" class="secondary-btn">Export PDF</button><button type="button" id="summaryPopupCloseBtn" class="secondary-btn">Tutup</button></div></div><section><h3>Ringkasan Narasi Otomatis</h3><p id="narrativeText" class="narrative">Memuat data...</p></section><section><h3>Top 10 Kecamatan Prioritas</h3><div class="analysis-grid"><article class="analysis-card"><h3>Top 10 Kecamatan Berdasarkan Total Luas Kumuh</h3><ol id="topLuasList" class="top-list"></ol></article><article class="analysis-card"><h3>Top 10 Kecamatan Berdasarkan Jumlah Lokasi</h3><ol id="topLokasiList" class="top-list"></ol></article><article class="analysis-card"><h3>Top 10 Kecamatan Berdasarkan Rata-rata Bobot</h3><ol id="topBobotList" class="top-list"></ol></article></div></section></div></div><div id="rekapModal" class="popup-modal is-hidden"><div class="popup-card"><div class="meta"><h2 id="rekapModalTitle">Rekap Infrastruktur</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="rekapPopupCopyBtn" class="secondary-btn">Copy</button><button type="button" id="rekapPopupExcelBtn" class="secondary-btn">Export Excel</button><button type="button" id="rekapPopupPdfBtn" class="secondary-btn">Export PDF</button><button type="button" id="rekapPopupCloseBtn" class="secondary-btn">Tutup</button></div></div><div id="rekapGrid" class="rekap-grid"></div></div></div><div id="listModal" class="list-modal is-hidden"><div class="list-card"><div class="meta"><h2 id="listModalTitle">Daftar</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="copyListBtn" class="secondary-btn">Copy</button><button type="button" id="exportListExcelBtn" class="secondary-btn">Export Excel</button><button type="button" id="exportListPdfBtn" class="secondary-btn">Export PDF</button><button type="button" id="closeListBtn" class="secondary-btn">Tutup</button></div></div><p id="listModalCount" class="map-note">Total: 0</p><div class="list-scroll"><table><thead><tr id="listTableHead"></tr></thead><tbody id="listTableBody"></tbody></table></div></div></div>
+<div id="mapModal" class="map-modal is-hidden"><div class="map-card"><div class="meta"><h2>Peta Kawasan Permukiman Kumuh Kabupaten Serang</h2><div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="resetMapBtn" class="secondary-btn">Reset View</button><button type="button" id="closeMapBtn" class="secondary-btn">Tutup</button></div></div><div id="mapContainer"></div><p id="mapStatusNote" class="map-note">Memuat batas desa/kelurahan...</p></div></div>
+<div id="detailModal" class="detail-modal is-hidden"><div class="detail-card"><div class="meta"><h2>Detail Lokasi</h2><div class="summary-actions"><button type="button" id="copyDetailBtn" class="secondary-btn">Copy Detail</button><button type="button" id="exportDetailExcelBtn" class="export-btn">Export Excel</button><button type="button" id="exportDetailPdfBtn" class="export-btn">Export PDF</button><button type="button" id="closeDetailBtn" class="secondary-btn">Tutup</button></div></div><div id="detailContent"></div></div></div>
+<script>
+const CSV_PATHS=['../data/sumber_data_baru.csv']; const DISPLAY_CSV_PATH='data/sumber_data_baru.csv'; const KAB_GEOJSON_PATH='../data/kabupatenserang.geojson'; const KEC_GEOJSON_PATH='../data/kabupatenserangkecamatan.geojson'; const DESA_GEOJSON_PATH='../data/kabupatenserangkeldesa.geojson';
+const state={rawData:[],filtered:[],page:1,pageSize:'all',sortKey:'',sortDir:'asc',summaryVisible:false,rekapVisible:false,activeSector:'ringkasan',currentDetailRow:null};
+const integerFormat=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}); const decimalFormat=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); const totalLuasFormat=new Intl.NumberFormat('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); const avgBobotFormat=new Intl.NumberFormat('id-ID',{maximumFractionDigits:1});
+const SECTOR_TABS=[{key:'ringkasan',label:'Ringkasan'},{key:'bangunan',label:'Bangunan'},{key:'jalan',label:'Jalan'},{key:'air',label:'Air Minum'},{key:'drainase',label:'Drainase'},{key:'sanitasi',label:'Air Limbah'},{key:'persampahan',label:'Sampah'},{key:'proteksi',label:'Kebakaran'}];
+const TECH_FIELDS={jalanLingkunganBangunan:{kebutuhan:['BANGUNAN-JALAN LINGKUNGAN (Unit)-KEBUTUHAN'],numerik:['BANGUNAN-JALAN LINGKUNGAN (Unit)-NUMERIK']},relokasi:{kebutuhan:['BANGUNAN-RELOKASI (Ha)-KEBUTUHAN'],numerik:['BANGUNAN-RELOKASI (Ha)-NUMERIK']},rtlh:{kebutuhan:['BANGUNAN-RTLH (Unit)-KEBUTUHAN'],numerik:['BANGUNAN-RTLH (Unit)-NUMERIK']},jalanBaru:{kebutuhan:['JALAN LINGKUNGAN-JALAN BARU (M)-KEBUTUHAN'],numerik:['JALAN LINGKUNGAN-JALAN BARU (M)-NUMERIK']},jalanRusak:{kebutuhan:['JALAN LINGKUNGAN-JALAN RUSAK (M)-KEBUTUHAN'],numerik:['JALAN LINGKUNGAN-JALAN RUSAK (M)-NUMERIK']},sabAkses:{kebutuhan:['AIR MINUM-SAB AKSES (KK)-KEBUTUHAN'],numerik:['AIR MINUM-SAB AKSES (KK)-NUMERIK']},sabKebutuhan:{kebutuhan:['AIR MINUM-SAB KEBUTUHAN (KK)-KEBUTUHAN'],numerik:['AIR MINUM-SAB KEBUTUHAN (KK)-NUMERIK']},drainaseLimpasan:{kebutuhan:['DRAINASE LINGKUNGAN-DRAINASE LIMPASAN (M)-KEBUTUHAN'],numerik:['DRAINASE LINGKUNGAN-DRAINASE LIMPASAN (M)-NUMERIK']},drainaseBaru:{kebutuhan:['DRAINASE LINGKUNGAN-DRAINASE BARU (M)-KEBUTUHAN'],numerik:['DRAINASE LINGKUNGAN-DRAINASE BARU (M)-NUMERIK']},drainaseRusak:{kebutuhan:['DRAINASE LINGKUNGAN-DRAINASE RUSAK (M)-KEBUTUHAN'],numerik:['DRAINASE LINGKUNGAN-DRAINASE RUSAK (M)-NUMERIK']},septictankKomunal:{kebutuhan:['SANITASI-SETPITENG KOMUNAL (KK)-KEBUTUHAN'],numerik:['SANITASI-SETPITENG KOMUNAL (KK)-NUMERIK']},jambanPribadi:{kebutuhan:['SANITASI-JAMBAN PRIBADI (KK)-KEBUTUHAN'],numerik:['SANITASI-JAMBAN PRIBADI (KK)-NUMERIK']},tpsTpst:{kebutuhan:['PERSAMPAHAN-TPS/TPST (KK)-KEBUTUHAN'],numerik:['PERSAMPAHAN-TPS/ TPST (KK)-NUMERIK']},tps3rBank:{kebutuhan:['PERSAMPAHAN-TPS3R/ BANK SAMPAH (KK) -KEBUTUHAN'],numerik:['PERSAMPAHAN-TPS3R/ BANK SAMPAH (KK) -NUMERIK']},proteksiJalanSumberAir:{kebutuhan:['PROTEKSI KEBAKARAN-JALAN LINGKUNGAN/ SUMBER AIR (KK)-KEBUTUHAN'],numerik:['PROTEKSI KEBAKARAN-JALAN LINGKUNGAN/ SUMBER AIR (KK)-NUMERIK']},proteksiAparDamkar:{kebutuhan:['PROTEKSI KEBAKARAN-APAR/ MOBIL/MOTOR DAMKAR-KEBUTUHAN'],numerik:['PROTEKSI KEBAKARAN-APAR/ MOBIL/MOTOR DAMKAR-NUMERIK']}};
+const SECTOR_COLUMNS={ringkasan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'luas_ha',l:'LUAS (Ha)',num:true},{k:'kewenangan',l:'KEWENANGAN'},{k:'bobot_kumuh',l:'Bobot Kumuh',center:true},{k:'tingkat_kekumuhan_awal',l:'Tingkat Kekumuhan Awal'},{k:'pembagian_kawasan_kumuh',l:'Pembagian Kawasan Kumuh'},{k:'aksi',l:'Aksi'}],bangunan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'jalanLingkunganBangunan_kebutuhan',l:'Ketidakteraturan bangunan (Kebutuhan)',num:true},{k:'jalanLingkunganBangunan_numerik',l:'Ketidakteraturan bangunan (Numerik)',num:true},{k:'relokasi_kebutuhan',l:'Tingkat kepadatan bangunan tinggi (Kebutuhan)',num:true},{k:'relokasi_numerik',l:'Tingkat kepadatan bangunan tinggi (Numerik)',num:true},{k:'rtlh_kebutuhan',l:'Kualitas bangunan tidak memenuhi syarat (Kebutuhan)',num:true},{k:'rtlh_numerik',l:'Kualitas bangunan tidak memenuhi syarat (Numerik)',num:true}],jalan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'jalanBaru_kebutuhan',l:'Jaringan jalan lingkungan tidak melayani seluruh lingkungan (Kebutuhan)',num:true},{k:'jalanBaru_numerik',l:'Jaringan jalan lingkungan tidak melayani seluruh lingkungan (Numerik)',num:true},{k:'jalanRusak_kebutuhan',l:'Kualitas permukaan jalan lingkungan buruk (Kebutuhan)',num:true},{k:'jalanRusak_numerik',l:'Kualitas permukaan jalan lingkungan buruk (Numerik)',num:true}],air:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'sabAkses_kebutuhan',l:'Akses aman air minum tidak tersedia (Kebutuhan)',num:true},{k:'sabAkses_numerik',l:'Akses aman air minum tidak tersedia (Numerik)',num:true},{k:'sabKebutuhan_kebutuhan',l:'Kebutuhan air minum minimal setiap individu tidak terpenuhi (Kebutuhan)',num:true},{k:'sabKebutuhan_numerik',l:'Kebutuhan air minum minimal setiap individu tidak terpenuhi (Numerik)',num:true}],drainase:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'drainaseBaru_kebutuhan',l:'Drainase lingkungan tidak tersedia (Kebutuhan)',num:true},{k:'drainaseBaru_numerik',l:'Drainase lingkungan tidak tersedia (Numerik)',num:true},{k:'drainaseLimpasan_kebutuhan',l:'Drainase tidak mampu mengalirkan limpasan air hujan sehingga menimbulkan genangan (Kebutuhan)',num:true},{k:'drainaseLimpasan_numerik',l:'Drainase tidak mampu mengalirkan limpasan air hujan sehingga menimbulkan genangan (Numerik)',num:true},{k:'drainaseRusak_kebutuhan',l:'Kualitas konstruksi drainase lingkungan buruk (Kebutuhan)',num:true},{k:'drainaseRusak_numerik',l:'Kualitas konstruksi drainase lingkungan buruk (Numerik)',num:true}],sanitasi:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'septictankKomunal_kebutuhan',l:'Sistem pengelolaan air limbah tidak memenuhi persyaratan teknis (Kebutuhan)',num:true},{k:'septictankKomunal_numerik',l:'Sistem pengelolaan air limbah tidak memenuhi persyaratan teknis (Numerik)',num:true},{k:'jambanPribadi_kebutuhan',l:'Prasarana dan sarana air limbah tidak memenuhi persyaratan teknis (Kebutuhan)',num:true},{k:'jambanPribadi_numerik',l:'Prasarana dan sarana air limbah tidak memenuhi persyaratan teknis (Numerik)',num:true}],persampahan:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'tpsTpst_kebutuhan',l:'Prasarana dan sarana persampahan tidak memenuhi persyaratan teknis (Kebutuhan)',num:true},{k:'tpsTpst_numerik',l:'Prasarana dan sarana persampahan tidak memenuhi persyaratan teknis (Numerik)',num:true},{k:'tps3rBank_kebutuhan',l:'Sistem pengelolaan persampahan tidak memenuhi persyaratan teknis (Kebutuhan)',num:true},{k:'tps3rBank_numerik',l:'Sistem pengelolaan persampahan tidak memenuhi persyaratan teknis (Numerik)',num:true}],proteksi:[{k:'kecamatan',l:'KECAMATAN'},{k:'desa',l:'DESA'},{k:'kampung',l:'KAMPUNG'},{k:'rt_rw',l:'RT/RW'},{k:'proteksiJalanSumberAir_kebutuhan',l:'Prasarana proteksi kebakaran tidak tersedia (Kebutuhan)',num:true},{k:'proteksiJalanSumberAir_numerik',l:'Prasarana proteksi kebakaran tidak tersedia (Numerik)',num:true},{k:'proteksiAparDamkar_kebutuhan',l:'Sarana proteksi kebakaran tidak tersedia (Kebutuhan)',num:true},{k:'proteksiAparDamkar_numerik',l:'Sarana proteksi kebakaran tidak tersedia (Numerik)',num:true}]};
+const el={searchInput:document.getElementById('searchInput'),kecamatanFilter:document.getElementById('kecamatanFilter'),desaFilter:document.getElementById('desaFilter'),kewenanganFilter:document.getElementById('kewenanganFilter'),kawasanFilter:document.getElementById('kawasanFilter'),pageSizeSelect:document.getElementById('pageSizeSelect'),tableBody:document.getElementById('tableBody'),tableHeadRow:document.getElementById('tableHeadRow'),reloadBtn:document.getElementById('reloadBtn'),resetFilterBtn:document.getElementById('resetFilterBtn'),exportExcelBtn:document.getElementById('exportExcelBtn'),exportPdfBtn:document.getElementById('exportPdfBtn'),resultInfo:document.getElementById('resultInfo'),resultInfoBottom:document.getElementById('resultInfoBottom'),pageInfo:document.getElementById('pageInfo'),pageInfoBottom:document.getElementById('pageInfoBottom'),paginationTop:document.getElementById('paginationTop'),paginationBottom:document.getElementById('paginationBottom'),prevBtn:document.getElementById('prevBtn'),prevBtnBottom:document.getElementById('prevBtnBottom'),nextBtn:document.getElementById('nextBtn'),nextBtnBottom:document.getElementById('nextBtnBottom'),totalData:document.getElementById('totalData'),totalKecamatan:document.getElementById('totalKecamatan'),totalDesa:document.getElementById('totalDesa'),totalKampung:document.getElementById('totalKampung'),avgBobot:document.getElementById('avgBobot'),sumLuas:document.getElementById('sumLuas'),sourcePathLabel:document.getElementById('sourcePathLabel'),lastUpdatedLabel:document.getElementById('lastUpdatedLabel'),narrativeText:document.getElementById('narrativeText'),summaryToggleBtn:document.getElementById('summaryToggleBtn'),narrativePanel:document.getElementById('narrativePanel'),top10Panel:document.getElementById('top10Panel'),topLuasList:document.getElementById('topLuasList'),topLokasiList:document.getElementById('topLokasiList'),topBobotList:document.getElementById('topBobotList'),sectorTabs:document.getElementById('sectorTabs'),rekapGrid:document.getElementById('rekapGrid'),rekapPanel:document.getElementById('rekapPanel'),rekapToggleBtn:document.getElementById('rekapToggleBtn'),detailModal:document.getElementById('detailModal'),detailContent:document.getElementById('detailContent'),closeDetailBtn:document.getElementById('closeDetailBtn'),copyDetailBtn:document.getElementById('copyDetailBtn'),exportDetailExcelBtn:document.getElementById('exportDetailExcelBtn'),exportDetailPdfBtn:document.getElementById('exportDetailPdfBtn'),openMapBtn:document.getElementById('openMapBtn'),mapModal:document.getElementById('mapModal'),closeMapBtn:document.getElementById('closeMapBtn'),resetMapBtn:document.getElementById('resetMapBtn'),mapContainer:document.getElementById('mapContainer'),mapStatusNote:document.getElementById('mapStatusNote'),cardTotalKecamatan:document.getElementById('cardTotalKecamatan'),cardTotalDesa:document.getElementById('cardTotalDesa'),cardTotalKampung:document.getElementById('cardTotalKampung'),listModal:document.getElementById('listModal'),listModalTitle:document.getElementById('listModalTitle'),listModalCount:document.getElementById('listModalCount'),listModalItems:document.getElementById('listModalItems'),copyListBtn:document.getElementById('copyListBtn'),exportListExcelBtn:document.getElementById('exportListExcelBtn'),exportListPdfBtn:document.getElementById('exportListPdfBtn'),closeListBtn:document.getElementById('closeListBtn'),listTableHead:document.getElementById('listTableHead'),listTableBody:document.getElementById('listTableBody'),summaryModal:document.getElementById('summaryModal'),summaryModalTitle:document.getElementById('summaryModalTitle'),summaryPopupCopyBtn:document.getElementById('summaryPopupCopyBtn'),summaryPopupExcelBtn:document.getElementById('summaryPopupExcelBtn'),summaryPopupPdfBtn:document.getElementById('summaryPopupPdfBtn'),summaryPopupCloseBtn:document.getElementById('summaryPopupCloseBtn'),rekapModal:document.getElementById('rekapModal'),rekapModalTitle:document.getElementById('rekapModalTitle'),rekapPopupCopyBtn:document.getElementById('rekapPopupCopyBtn'),rekapPopupExcelBtn:document.getElementById('rekapPopupExcelBtn'),rekapPopupPdfBtn:document.getElementById('rekapPopupPdfBtn'),rekapPopupCloseBtn:document.getElementById('rekapPopupCloseBtn')};
+function parseNumber(v){return Number(String(v??'0').replace(',','.'))||0} const UNIT_MAP={jalanLingkunganBangunan:'Rumah',relokasi:'Rumah',rtlh:'Rumah',jalanBaru:'m',jalanRusak:'m',sabAkses:'KK',sabKebutuhan:'KK',drainaseLimpasan:'m',drainaseBaru:'m',drainaseRusak:'m',septictankKomunal:'KK',jambanPribadi:'KK',tpsTpst:'Unit',tps3rBank:'Unit',proteksiJalanSumberAir:'KK',proteksiAparDamkar:'KK'}; function formatUnitValue(v,unit){const n=parseNumber(v);const txt=Number.isInteger(n)?new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(n):new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n);return unit?`${txt} ${unit}`:txt;} function formatPlainNumber(v){const n=parseNumber(v);return Number.isInteger(n)?new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(n):new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(n)} function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function normalizeHeader(v){return String(v||'').trim().replace(/\s+/g,' ').replace(/\/\s+/g,'/').replace(/\s+-/g,'-').toUpperCase()}
+function buildHeaderMap(headers){const m={};headers.forEach((h,i)=>{m[h]=i; m[normalizeHeader(h)]=i;});return m}
+function readField(cols,hmap,cands){for(const c of cands){if(hmap[c]!==undefined) return (cols[hmap[c]]||'').trim();const n=normalizeHeader(c);if(hmap[n]!==undefined) return (cols[hmap[n]]||'').trim();}return ''}
+function parseCsv(txt){const lines=txt.trim().split(/\r?\n/);const headers=lines[0].split(',').map(h=>h.trim());const hmap=buildHeaderMap(headers);
+return lines.slice(1).filter(Boolean).map(line=>{const cols=line.split(','); const get=(...c)=>readField(cols,hmap,c);const row={rt_rw:get('RT/RW','rt_rw'),kampung:get('KAMPUNG','kampung'),desa:get('DESA','desa'),kecamatan:get('KECAMATAN','kecamatan'),luas_ha:get('LUAS (Ha)','luas_ha'),kewenangan:get('KEWENANGAN','kewenangan'),bobot_kumuh:get('Bobot Kumuh','bobot_kumuh'),tingkat_kekumuhan_awal:get('Tingkat Kekumuhan Awal','tingkat_kekumuhan_awal'),pembagian_kawasan_kumuh:get('Pembagian Kawasan Kumuh','pembagian_kawasan_kumuh')};
+for(const [k,v] of Object.entries(TECH_FIELDS)){row[k+'_kebutuhan']=get(...v.kebutuhan); row[k+'_numerik']=get(...v.numerik);}
+return row;});}
+function getSummary(data){const b=data.reduce((a,r)=>a+parseNumber(r.bobot_kumuh),0), l=data.reduce((a,r)=>a+parseNumber(r.luas_ha),0); return {lokasi:data.length,kecamatan:new Set(data.map(r=>r.kecamatan).filter(Boolean)).size,desa:new Set(data.map(r=>`${r.kecamatan}||${r.desa}`).filter(v=>v!=='||')).size,kampung:new Set(data.map(r=>`${r.kecamatan}||${r.desa}||${r.kampung}`).filter(v=>v!=='||||')).size,avgBobot:data.length?b/data.length:0,totalLuas:l};}
+function renderStats(){const s=getSummary(state.filtered); el.totalData.textContent=integerFormat.format(s.lokasi);el.totalKecamatan.textContent=integerFormat.format(s.kecamatan);el.totalDesa.textContent=integerFormat.format(s.desa);el.totalKampung.textContent=integerFormat.format(s.kampung);el.avgBobot.textContent=s.lokasi?avgBobotFormat.format(s.avgBobot):'0';el.sumLuas.textContent=s.lokasi?`${totalLuasFormat.format(s.totalLuas)} Ha`:'0';}
+function renderNarrative(){const s=getSummary(state.filtered); if(!s.lokasi){el.narrativeText.textContent='Tidak ditemukan data sesuai filter yang dipilih.';return;} const total=`${totalLuasFormat.format(s.totalLuas)} Ha`; const avg=avgBobotFormat.format(s.avgBobot); el.narrativeText.textContent=el.kecamatanFilter.value?`Pada Kecamatan ${el.kecamatanFilter.value}, terdapat ${integerFormat.format(s.lokasi)} lokasi kawasan permukiman kumuh yang tersebar di ${integerFormat.format(s.desa)} desa, dengan total luas ${total} dan rata-rata bobot ${avg}.`:`Berdasarkan data yang tersedia, terdapat ${integerFormat.format(s.lokasi)} lokasi kawasan permukiman kumuh yang tersebar di ${integerFormat.format(s.kecamatan)} kecamatan dan ${integerFormat.format(s.desa)} desa, dengan total luas ${total} dan rata-rata bobot ${avg}.`;}
+function renderFilters(){const kec=[...new Set(state.rawData.map(d=>d.kecamatan).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));const kew=[...new Set(state.rawData.map(d=>d.kewenangan).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));const kws=[...new Set(state.rawData.map(d=>d.pembagian_kawasan_kumuh).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));el.kecamatanFilter.innerHTML='<option value="">Semua Kecamatan</option>'+kec.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');el.kewenanganFilter.innerHTML='<option value="">Semua Kewenangan</option>'+kew.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');el.kawasanFilter.innerHTML='<option value="">Semua Kawasan</option>'+kws.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');renderDesaFilter('');}
+function renderDesaFilter(sel=el.desaFilter.value){const src=el.kecamatanFilter.value?state.rawData.filter(d=>d.kecamatan===el.kecamatanFilter.value):state.rawData;const desa=[...new Set(src.map(d=>d.desa).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'id'));el.desaFilter.innerHTML='<option value="">Semua Desa</option>'+desa.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');el.desaFilter.value=desa.includes(sel)?sel:'';}
+function applySorting(data){if(!state.sortKey)return [...data];const num=['luas_ha','bobot_kumuh'];return [...data].sort((a,b)=>{const l=num.includes(state.sortKey)?parseNumber(a[state.sortKey]):String(a[state.sortKey]||'').toLowerCase();const r=num.includes(state.sortKey)?parseNumber(b[state.sortKey]):String(b[state.sortKey]||'').toLowerCase();if(l<r)return state.sortDir==='asc'?-1:1;if(l>r)return state.sortDir==='asc'?1:-1;return 0;});}
+function applyFilters(){const q=el.searchInput.value.toLowerCase().trim(),k=el.kecamatanFilter.value,d=el.desaFilter.value,kw=el.kewenanganFilter.value,kws=el.kawasanFilter.value;const f=state.rawData.filter(r=>{const s=`${r.rt_rw} ${r.kampung} ${r.desa} ${r.kecamatan} ${r.kewenangan} ${r.bobot_kumuh} ${r.luas_ha} ${r.tingkat_kekumuhan_awal} ${r.pembagian_kawasan_kumuh}`.toLowerCase();return (!q||s.includes(q))&&(!k||r.kecamatan===k)&&(!d||r.desa===d)&&(!kw||r.kewenangan===kw)&&(!kws||r.pembagian_kawasan_kumuh===kws)});state.filtered=applySorting(f);state.page=1;renderDashboard();}
+function wrapHeaderLabel(label){const words=String(label||'').trim().split(/\s+/);if(words.length<=2)return escapeHtml(label||'');const lines=[];for(let i=0;i<words.length;i+=2)lines.push(words.slice(i,i+2).join(' '));return lines.map(escapeHtml).join('<br>')}
+function headerClassForKey(key){if(['kecamatan','desa','kampung'].includes(key))return 'col-id';if(key==='rt_rw')return 'col-rt';if(['luas_ha','bobot_kumuh'].includes(key)||key.endsWith('_kebutuhan')||key.endsWith('_numerik'))return 'col-num';if(['tingkat_kekumuhan_awal','pembagian_kawasan_kumuh'].includes(key))return 'col-wide';if(key==='aksi')return 'col-aksi';return ''}
+function renderSortIndicators(){}
+function getPageSize(){return state.pageSize==='all'?state.filtered.length||1:Number(state.pageSize)}
+function renderSectorTabs(){el.sectorTabs.innerHTML=SECTOR_TABS.map(t=>`<button class="sector-tab ${state.activeSector===t.key?'active':''}" data-sector="${t.key}">${t.label}</button>`).join('');el.sectorTabs.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{state.activeSector=b.dataset.sector;renderTable();renderSectorTabs();}));}
+function valForRow(r,k){if(k==='aksi') return `<button type="button" class="secondary-btn detail-btn" data-row-index="${escapeHtml(r._rowIndex)}">Detail</button>`; if(k.endsWith('_kebutuhan')) {const base=k.replace(/_kebutuhan$/,'');return formatUnitValue(r[k]||0,UNIT_MAP[base]||'');} if(k.endsWith('_numerik')) {return formatPlainNumber(r[k]||0);} if(k==='luas_ha') return `${decimalFormat.format(parseNumber(r[k]))} Ha`; if(k==='bobot_kumuh') return avgBobotFormat.format(parseNumber(r[k])); return escapeHtml(r[k]||'');}
+function renderTable(){const cols=SECTOR_COLUMNS[state.activeSector]||SECTOR_COLUMNS.ringkasan;const sortable=['kecamatan','desa','kampung','rt_rw','luas_ha','kewenangan','bobot_kumuh','tingkat_kekumuhan_awal','pembagian_kawasan_kumuh'];el.tableHeadRow.innerHTML=cols.map(c=>{const cls=[sortable.includes(c.k)?'sortable':'',headerClassForKey(c.k)].filter(Boolean).join(' ');const lbl=wrapHeaderLabel(c.l);return sortable.includes(c.k)?`<th class="${cls}" data-sort="${c.k}">${lbl}</th>`:`<th class="${cls}">${lbl}</th>`}).join('');const total=state.filtered.length,showAll=state.pageSize==='all',ps=getPageSize(),tp=showAll?1:Math.max(1,Math.ceil(total/ps));if(state.page>tp)state.page=tp;const start=showAll?0:(state.page-1)*ps,end=showAll?total:Math.min(start+ps,total),rows=state.filtered.slice(start,end).map((r,i)=>({...r,_rowIndex:start+i}));el.tableBody.innerHTML=rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.num?'num':''} ${c.center?'center':''}">${valForRow(r,c.k)}</td>`).join('')}</tr>`).join('')||'<tr><td colspan="20">Data tidak ditemukan.</td></tr>';const info=`Menampilkan ${total===0?0:start+1}-${end} dari ${integerFormat.format(total)} data`;el.resultInfo.textContent=info;el.resultInfoBottom.textContent=info;el.pageInfo.textContent=`Hal ${state.page}/${tp}`;el.pageInfoBottom.textContent=`Hal ${state.page}/${tp}`;const hide=total===0||showAll;el.paginationTop.classList.toggle('is-hidden',hide);el.paginationBottom.classList.toggle('is-hidden',hide);el.prevBtn.disabled=state.page<=1||hide;el.prevBtnBottom.disabled=state.page<=1||hide;el.nextBtn.disabled=state.page>=tp||hide;el.nextBtnBottom.disabled=state.page>=tp||hide;el.tableBody.querySelectorAll('.detail-btn').forEach(btn=>btn.addEventListener('click',()=>{const idx=Number(btn.dataset.rowIndex);const row=state.filtered[idx];if(row)showDetail(row);}));el.tableHeadRow.querySelectorAll('th.sortable').forEach(th=>th.addEventListener('click',()=>handleSort(th.dataset.sort)));}
+function agg(data){const m=new Map();data.forEach(r=>{const k=r.kecamatan||'-';if(!m.has(k))m.set(k,{name:k,lokasi:0,totalLuas:0,totalBobot:0});const x=m.get(k);x.lokasi++;x.totalLuas+=parseNumber(r.luas_ha);x.totalBobot+=parseNumber(r.bobot_kumuh);});return [...m.values()].map(v=>({...v,avgBobot:v.lokasi?v.totalBobot/v.lokasi:0}));}
+function renderTopList(t,items,f){t.innerHTML=items.length?items.slice(0,10).map(i=>`<li><strong>${escapeHtml(i.name)}</strong> — ${f(i)}</li>`).join(''):'<li>Data tidak tersedia.</li>'}
+function renderTopKecamatan(){const g=agg(state.filtered);renderTopList(el.topLuasList,[...g].sort((a,b)=>b.totalLuas-a.totalLuas),i=>`${totalLuasFormat.format(i.totalLuas)} Ha`);renderTopList(el.topLokasiList,[...g].sort((a,b)=>b.lokasi-a.lokasi),i=>`${integerFormat.format(i.lokasi)} lokasi`);renderTopList(el.topBobotList,[...g].sort((a,b)=>b.avgBobot-a.avgBobot),i=>`rata-rata bobot ${avgBobotFormat.format(i.avgBobot)}`)}
+function rekapValue(rows,key){return rows.reduce((a,r)=>a+parseNumber(r[`${key}_kebutuhan`]||0),0)}
+function countNeed(rows,key){return rows.filter(r=>parseNumber(r[`${key}_kebutuhan`])>0).length}
+function formatRekapValue(value,unit){if(unit==='Ha')return `${decimalFormat.format(parseNumber(value))} ${unit}`;return formatUnitValue(value,unit)}
+function renderRekap(){
+  const groups=[
+    {title:'Bangunan Gedung',items:[
+      {label:'Rumah Belum Terlayani Akses Jalan Lingkungan',value:rekapValue(state.filtered,'jalanLingkunganBangunan'),unit:'Rumah'},
+      {label:'Rumah Perlu Relokasi',value:rekapValue(state.filtered,'relokasi'),unit:'Rumah'},
+      {label:'Rumah Tidak Layak Huni',value:rekapValue(state.filtered,'rtlh'),unit:'Rumah'}
+    ]},
+    {title:'Jalan Lingkungan',items:[
+      {label:'Kebutuhan Jalan Baru',value:rekapValue(state.filtered,'jalanBaru'),unit:'m'},
+      {label:'Jalan Lingkungan Rusak',value:rekapValue(state.filtered,'jalanRusak'),unit:'m'}
+    ]},
+    {title:'Penyediaan Air Minum',items:[
+      {label:'KK Belum Terlayani Akses Air Minum',value:rekapValue(state.filtered,'sabAkses'),unit:'KK'},
+      {label:'KK dengan Kebutuhan Air Minum Belum Tercukupi',value:rekapValue(state.filtered,'sabKebutuhan'),unit:'KK'}
+    ]},
+    {title:'Drainase Lingkungan',items:[
+      {label:'Area Genangan/Limpasan Drainase',value:rekapValue(state.filtered,'drainaseLimpasan'),unit:'Ha'},
+      {label:'Kebutuhan Drainase Baru',value:rekapValue(state.filtered,'drainaseBaru'),unit:'m'},
+      {label:'Drainase Rusak',value:rekapValue(state.filtered,'drainaseRusak'),unit:'m'}
+    ]},
+    {title:'Pengelolaan Air Limbah',items:[
+      {label:'Kebutuhan Sistem Sanitasi Komunal',value:rekapValue(state.filtered,'septictankKomunal'),unit:'KK'},
+      {label:'KK Belum Memiliki Jamban Pribadi',value:rekapValue(state.filtered,'jambanPribadi'),unit:'KK'}
+    ]},
+    {title:'Pengelolaan Persampahan',items:[
+      {label:'KK Belum Terlayani TPS/TPST',value:rekapValue(state.filtered,'tpsTpst'),unit:'KK'},
+      {label:'Estimasi Kebutuhan TPS/TPST',value:countNeed(state.filtered,'tpsTpst'),unit:'Unit/lokasi'},
+      {label:'KK Belum Terlayani TPS3R/Bank Sampah',value:rekapValue(state.filtered,'tps3rBank'),unit:'KK'},
+      {label:'Lokasi Membutuhkan TPS3R/Bank Sampah',value:countNeed(state.filtered,'tps3rBank'),unit:'RT/lokasi'}
+    ]},
+    {title:'Proteksi Kebakaran',items:[
+      {label:'KK Belum Terlayani Akses Proteksi Kebakaran',value:rekapValue(state.filtered,'proteksiJalanSumberAir'),unit:'KK'},
+      {label:'Kebutuhan Sarana Proteksi Kebakaran',value:rekapValue(state.filtered,'proteksiAparDamkar'),unit:'KK'},
+      {label:'Lokasi Membutuhkan Sarana Proteksi Kebakaran',value:countNeed(state.filtered,'proteksiAparDamkar'),unit:'RT/lokasi'}
+    ]}
+  ];
+  el.rekapGrid.innerHTML=groups.map(g=>`<div class="rekap-group"><h3>${g.title}</h3><ul class="rekap-list">${g.items.map(it=>`<li><strong>${it.label}:</strong> ${formatRekapValue(it.value,it.unit)}</li>`).join('')}</ul></div>`).join('');
+}
+function renderDashboard(){renderStats();renderNarrative();renderTopKecamatan();renderRekap();renderSectorTabs();renderTable();}
+function getActiveFilterTitle(){const parts=[];if(el.kecamatanFilter.value)parts.push(`Kecamatan ${el.kecamatanFilter.value}`);if(el.desaFilter.value)parts.push(`Desa ${el.desaFilter.value}`);if(el.kewenanganFilter.value)parts.push(`Kewenangan ${el.kewenanganFilter.value}`);if(el.kawasanFilter.value)parts.push(`Kawasan ${el.kawasanFilter.value}`);if(el.searchInput.value.trim())parts.push(`Pencarian \"${el.searchInput.value.trim()}\"`);return parts.join(' - ')}function openSummaryModal(){const extra=getActiveFilterTitle();el.summaryModalTitle.textContent=extra?`Ringkasan & Top 10 - ${extra}`:'Ringkasan & Top 10';el.summaryModal.classList.remove('is-hidden')}function closeSummaryModal(){el.summaryModal.classList.add('is-hidden')}function openRekapModal(){const extra=getActiveFilterTitle();el.rekapModalTitle.textContent=extra?`Rekap Infrastruktur - ${extra}`:'Rekap Infrastruktur';el.rekapModal.classList.remove('is-hidden')}function closeRekapModal(){el.rekapModal.classList.add('is-hidden')}
+async function copyTextWithFeedback(button,text){if(!text.trim())return;try{await navigator.clipboard.writeText(text);}catch(_){const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}const o=button.textContent;button.textContent='Tersalin';setTimeout(()=>button.textContent=o,1200)}
+function buildTop10Text(){const pick=list=>[...list.querySelectorAll('li')].map(li=>li.textContent.trim()).join('\n');return ['Top 10 Kecamatan Berdasarkan Total Luas Kumuh',pick(el.topLuasList),'','Top 10 Kecamatan Berdasarkan Jumlah Lokasi',pick(el.topLokasiList),'','Top 10 Kecamatan Berdasarkan Rata-rata Bobot',pick(el.topBobotList)].join('\n')}
 
-  <div class="filter">
-    <input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa..." />
-    <select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select>
-    <select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select>
-    <select id="pageSizeSelect">
-      <option value="10">10 / halaman</option>
-      <option value="25" selected>25 / halaman</option>
-      <option value="50">50 / halaman</option>
-    </select>
-    <button id="reloadBtn">Muat Ulang Data</button>
-  </div>
-
-  <div class="meta">
-    <span id="resultInfo">Menampilkan 0 data</span>
-    <div class="pagination">
-      <button id="prevBtn">Sebelumnya</button>
-      <span id="pageInfo">Hal 1/1</span>
-      <button id="nextBtn">Berikutnya</button>
-    </div>
-  </div>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>RT/RW</th><th>Kampung</th><th>Desa</th><th>Kecamatan</th><th>Luas (Ha)</th><th>Kewenangan</th><th>Bobot</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-
-  <script>
-    const CSV_PATHS = ['../data/sumber_data_baru.csv'];
-    const state = { rawData: [], filtered: [], page: 1, pageSize: 25 };
-
-    const el = {
-      searchInput: document.getElementById('searchInput'), kecamatanFilter: document.getElementById('kecamatanFilter'), kewenanganFilter: document.getElementById('kewenanganFilter'),
-      pageSizeSelect: document.getElementById('pageSizeSelect'), tableBody: document.getElementById('tableBody'), reloadBtn: document.getElementById('reloadBtn'),
-      resultInfo: document.getElementById('resultInfo'), pageInfo: document.getElementById('pageInfo'), prevBtn: document.getElementById('prevBtn'), nextBtn: document.getElementById('nextBtn'),
-      totalData: document.getElementById('totalData'), totalKecamatan: document.getElementById('totalKecamatan'), avgBobot: document.getElementById('avgBobot'), sumLuas: document.getElementById('sumLuas')
-    };
-
-    function parseCsv(csvText) {
-      const lines = csvText.trim().split(/\r?\n/);
-      const headers = lines[0].split(',').map(h => h.trim());
-      const idx = Object.fromEntries(headers.map((h, i) => [h, i]));
-      const get = (cols, keys) => {
-        for (const key of keys) {
-          if (idx[key] !== undefined) return (cols[idx[key]] || '').trim();
-        }
-        return '';
-      };
-
-      return lines.slice(1).filter(Boolean).map(line => {
-        const cols = line.split(',');
-        return {
-          rt_rw: get(cols, ['rt_rw', 'RT/RW']),
-          kampung: get(cols, ['kampung', 'KAMPUNG']),
-          desa: get(cols, ['desa', 'DESA']),
-          kecamatan: get(cols, ['kecamatan', 'KECAMATAN']),
-          luas_ha: get(cols, ['luas_ha', 'LUAS (Ha)']),
-          kewenangan: get(cols, ['kewenangan', 'KEWENANGAN']),
-          bobot_kumuh: get(cols, ['bobot_kumuh', 'Bobot Kumuh'])
-        };
-      });
-    }
-
-    function renderStats() {
-      const data = state.rawData;
-      el.totalData.textContent = data.length;
-      el.totalKecamatan.textContent = new Set(data.map(d => d.kecamatan)).size;
-      const avg = data.length ? data.reduce((a, b) => a + Number(b.bobot_kumuh || 0), 0) / data.length : 0;
-      const sum = data.reduce((a, b) => a + Number(b.luas_ha || 0), 0);
-      el.avgBobot.textContent = avg.toFixed(1);
-      el.sumLuas.textContent = sum.toFixed(3);
-    }
-
-    function renderFilters() {
-      const kec = [...new Set(state.rawData.map(d => d.kecamatan))].sort();
-      const kew = [...new Set(state.rawData.map(d => d.kewenangan))].sort();
-      el.kecamatanFilter.innerHTML = '<option value="">Semua Kecamatan</option>' + kec.map(v => `<option value="${v}">${v}</option>`).join('');
-      el.kewenanganFilter.innerHTML = '<option value="">Semua Kewenangan</option>' + kew.map(v => `<option value="${v}">${v}</option>`).join('');
-    }
-
-    function applyFilters() {
-      const q = el.searchInput.value.toLowerCase().trim();
-      const kec = el.kecamatanFilter.value;
-      const kew = el.kewenanganFilter.value;
-      state.filtered = state.rawData.filter(d => {
-        const matchQ = !q || `${d.rt_rw} ${d.kampung} ${d.desa} ${d.kecamatan}`.toLowerCase().includes(q);
-        return matchQ && (!kec || d.kecamatan === kec) && (!kew || d.kewenangan === kew);
-      });
-      state.page = 1;
-      renderTable();
-    }
-
-    function renderTable() {
-      const total = state.filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-      if (state.page > totalPages) state.page = totalPages;
-      const start = (state.page - 1) * state.pageSize;
-      const end = Math.min(start + state.pageSize, total);
-      const rows = state.filtered.slice(start, end);
-      el.tableBody.innerHTML = rows.map(d => `<tr><td>${d.rt_rw}</td><td>${d.kampung}</td><td>${d.desa}</td><td>${d.kecamatan}</td><td>${d.luas_ha}</td><td>${d.kewenangan}</td><td>${d.bobot_kumuh}</td></tr>`).join('') || '<tr><td colspan="7">Data tidak ditemukan.</td></tr>';
-      el.resultInfo.textContent = `Menampilkan ${total === 0 ? 0 : start + 1}-${end} dari ${total} data`;
-      el.pageInfo.textContent = `Hal ${state.page}/${totalPages}`;
-      el.prevBtn.disabled = state.page <= 1;
-      el.nextBtn.disabled = state.page >= totalPages;
-    }
-
-    async function loadData() {
-      let loaded = null;
-      for (const path of CSV_PATHS) {
-        try {
-          const res = await fetch(path);
-          if (res.ok) { loaded = await res.text(); break; }
-        } catch (_) {}
-      }
-      if (!loaded) {
-        el.tableBody.innerHTML = '<tr><td colspan="7">Gagal memuat CSV. Jalankan: cd web && python3 -m http.server 8000</td></tr>';
-        return;
-      }
-      state.rawData = parseCsv(loaded);
-      state.filtered = [...state.rawData];
-      renderStats();
-      renderFilters();
-      renderTable();
-    }
-
-    el.searchInput.addEventListener('input', applyFilters);
-    el.kecamatanFilter.addEventListener('change', applyFilters);
-    el.kewenanganFilter.addEventListener('change', applyFilters);
-    el.pageSizeSelect.addEventListener('change', () => { state.pageSize = Number(el.pageSizeSelect.value); state.page = 1; renderTable(); });
-    el.prevBtn.addEventListener('click', () => { if (state.page > 1) { state.page--; renderTable(); } });
-    el.nextBtn.addEventListener('click', () => { const max = Math.max(1, Math.ceil(state.filtered.length / state.pageSize)); if (state.page < max) { state.page++; renderTable(); } });
-    el.reloadBtn.addEventListener('click', loadData);
-
-    loadData();
-  </script>
-</body>
-</html>
+function getPopupFilterLabel(){const parts=[];if(el.kecamatanFilter.value)parts.push(`Kecamatan ${el.kecamatanFilter.value}`);if(el.desaFilter.value)parts.push(`Desa ${el.desaFilter.value}`);if(el.kewenanganFilter.value)parts.push(`Kewenangan ${el.kewenanganFilter.value}`);if(el.kawasanFilter.value)parts.push(`Kawasan ${el.kawasanFilter.value}`);if(el.searchInput.value.trim())parts.push(`Pencarian "${el.searchInput.value.trim()}"`);return parts.join(' - ')}
+function getPopupRows(type){const m=new Map();state.filtered.forEach(r=>{const luas=parseNumber(r.luas_ha);if(type==='kecamatan'){if(!r.kecamatan)return;const k=r.kecamatan;if(!m.has(k))m.set(k,{kecamatan:r.kecamatan,total:0});m.get(k).total+=luas;return;}if(type==='desa'){if(!r.kecamatan||!r.desa)return;const k=`${r.kecamatan}||${r.desa}`;if(!m.has(k))m.set(k,{kecamatan:r.kecamatan,desa:r.desa,total:0});m.get(k).total+=luas;return;}if(!r.kecamatan||!r.desa||!r.kampung)return;const k=`${r.kecamatan}||${r.desa}||${r.kampung}`;if(!m.has(k))m.set(k,{kecamatan:r.kecamatan,desa:r.desa,kampung:r.kampung,total:0});m.get(k).total+=luas;});const rows=[...m.values()];rows.sort((a,b)=>`${a.kecamatan} ${a.desa||''} ${a.kampung||''}`.localeCompare(`${b.kecamatan} ${b.desa||''} ${b.kampung||''}`,'id'));return rows;}
+function renderPopupTable(type,rows){const cols=type==='kecamatan'?[['no','No'],['kecamatan','Kecamatan'],['total','Total Luas (Ha)']]:type==='desa'?[['no','No'],['kecamatan','Kecamatan'],['desa','Desa'],['total','Total Luas (Ha)']]:[['no','No'],['kecamatan','Kecamatan'],['desa','Desa'],['kampung','Kampung'],['total','Total Luas (Ha)']];el.listTableHead.innerHTML=cols.map(([k,l])=>`<th class="${k==='no'?'center':''} ${k==='total'?'num':''}">${l}</th>`).join('');el.listTableBody.innerHTML=rows.length?rows.map((r,i)=>`<tr>${cols.map(([k])=>k==='no'?`<td class="center">${i+1}</td>`:k==='total'?`<td class="num">${decimalFormat.format(parseNumber(r.total))} Ha</td>`:`<td>${escapeHtml(r[k]||'')}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${cols.length}">Tidak ada data</td></tr>`;}
+function openListModal(type){state.activeListType=type;const cfg={kecamatan:'Daftar Kecamatan',desa:'Daftar Desa',kampung:'Daftar Kampung'};const rows=getPopupRows(type);const extra=getPopupFilterLabel();el.listModalTitle.textContent=extra?`${cfg[type]} - ${extra}`:(cfg[type]||'Daftar');el.listModalCount.textContent=`Total: ${integerFormat.format(rows.length)}`;renderPopupTable(type,rows);el.listModal.classList.remove('is-hidden');}
+function closeListModal(){el.listModal.classList.add('is-hidden');el.listTableHead.innerHTML='';el.listTableBody.innerHTML='';}
+function getPopupExportData(){const type=state.activeListType||'kecamatan';return {type,rows:getPopupRows(type)};}
+async function copyList(){const {type,rows}=getPopupExportData();const header=type==='kecamatan'?['No','Kecamatan','Total Luas (Ha)']:type==='desa'?['No','Kecamatan','Desa','Total Luas (Ha)']:['No','Kecamatan','Desa','Kampung','Total Luas (Ha)'];const lines=[el.listModalTitle.textContent,header.join('	'),...rows.map((r,i)=>type==='kecamatan'?`${i+1}	${r.kecamatan}	${decimalFormat.format(parseNumber(r.total))} Ha`:type==='desa'?`${i+1}	${r.kecamatan}	${r.desa}	${decimalFormat.format(parseNumber(r.total))} Ha`:`${i+1}	${r.kecamatan}	${r.desa}	${r.kampung}	${decimalFormat.format(parseNumber(r.total))} Ha`)];await copyTextWithFeedback(el.copyListBtn,lines.join('\\n'));}
+function popupFileSlug(){const t=state.activeListType||'kecamatan';const base=`daftar-${t}`;const parts=[];if(el.kecamatanFilter.value)parts.push('kecamatan-'+el.kecamatanFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.desaFilter.value)parts.push('desa-'+el.desaFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.kewenanganFilter.value)parts.push('kewenangan-'+el.kewenanganFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.kawasanFilter.value)parts.push('kawasan-'+el.kawasanFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.searchInput.value.trim())parts.push('pencarian-'+el.searchInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-'));return `${base}${parts.length?'-'+parts.join('-'):''}`;}
+function exportPopupExcel(){if(!window.XLSX)return;const {type,rows}=getPopupExportData();const data=rows.map((r,i)=>type==='kecamatan'?{'No':i+1,'Kecamatan':r.kecamatan,'Total Luas (Ha)':`${decimalFormat.format(parseNumber(r.total))} Ha`}:type==='desa'?{'No':i+1,'Kecamatan':r.kecamatan,'Desa':r.desa,'Total Luas (Ha)':`${decimalFormat.format(parseNumber(r.total))} Ha`}:{'No':i+1,'Kecamatan':r.kecamatan,'Desa':r.desa,'Kampung':r.kampung,'Total Luas (Ha)':`${decimalFormat.format(parseNumber(r.total))} Ha`});const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Daftar');XLSX.writeFile(wb,`${popupFileSlug()}.xlsx`);}
+function exportPopupPdf(){if(!window.jspdf||!window.jspdf.jsPDF)return;const {jsPDF}=window.jspdf;const {type,rows}=getPopupExportData();const cols=type==='kecamatan'?['No','Kecamatan','Total Luas (Ha)']:type==='desa'?['No','Kecamatan','Desa','Total Luas (Ha)']:['No','Kecamatan','Desa','Kampung','Total Luas (Ha)'];const body=rows.map((r,i)=>type==='kecamatan'?[i+1,r.kecamatan,`${decimalFormat.format(parseNumber(r.total))} Ha`]:type==='desa'?[i+1,r.kecamatan,r.desa,`${decimalFormat.format(parseNumber(r.total))} Ha`]:[i+1,r.kecamatan,r.desa,r.kampung,`${decimalFormat.format(parseNumber(r.total))} Ha`]);const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});doc.setFontSize(12);doc.text(el.listModalTitle.textContent||'Daftar',14,12);doc.autoTable({startY:18,head:[cols],body,styles:{fontSize:8},headStyles:{fillColor:[15,118,110]}});doc.save(`${popupFileSlug()}.pdf`);}
+function summaryPopupText(){return `${el.narrativeText.textContent}\n\n${buildTop10Text()}`.trim()}
+function popupContextSlug(){const parts=[];if(el.kecamatanFilter.value)parts.push('kecamatan-'+el.kecamatanFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.desaFilter.value)parts.push('desa-'+el.desaFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.kewenanganFilter.value)parts.push('kewenangan-'+el.kewenanganFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.kawasanFilter.value)parts.push('kawasan-'+el.kawasanFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.searchInput.value.trim())parts.push('pencarian-'+el.searchInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-'));return parts.join('-')}
+function exportSummaryPopupExcel(){if(!window.XLSX)return;const rows=[{'Konten':el.narrativeText.textContent},{'Konten':'Top 10 Total Luas'},{'Konten':[...el.topLuasList.querySelectorAll('li')].map(li=>li.textContent).join(' | ')},{'Konten':'Top 10 Jumlah Lokasi'},{'Konten':[...el.topLokasiList.querySelectorAll('li')].map(li=>li.textContent).join(' | ')},{'Konten':'Top 10 Rata-rata Bobot'},{'Konten':[...el.topBobotList.querySelectorAll('li')].map(li=>li.textContent).join(' | ')}];const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'RingkasanTop10');const slug=popupContextSlug();XLSX.writeFile(wb,`ringkasan-top10${slug?'-'+slug:''}.xlsx`)}
+function exportSummaryPopupPdf(){if(!window.jspdf||!window.jspdf.jsPDF)return;const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});doc.setFontSize(12);doc.text(el.summaryModalTitle.textContent||'Ringkasan & Top 10',14,12);doc.setFontSize(10);doc.text(summaryPopupText().slice(0,5000),14,20,{maxWidth:180});const slug=popupContextSlug();doc.save(`ringkasan-top10${slug?'-'+slug:''}.pdf`)}
+function rekapPopupText(){return [...el.rekapGrid.querySelectorAll('.rekap-group')].map(g=>{const t=g.querySelector('h3')?.textContent||'';const items=[...g.querySelectorAll('li')].map(li=>li.textContent.trim()).join('\n');return `${t}\n${items}`}).join('\n\n')}
+function exportRekapPopupExcel(){if(!window.XLSX)return;const rows=[];el.rekapGrid.querySelectorAll('.rekap-group').forEach(g=>{rows.push({'Aspek':g.querySelector('h3')?.textContent||'','Item':''});g.querySelectorAll('li').forEach(li=>rows.push({'Aspek':'','Item':li.textContent.trim()}));});const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Rekap');const slug=popupContextSlug();XLSX.writeFile(wb,`rekap-infrastruktur${slug?'-'+slug:''}.xlsx`)}
+function exportRekapPopupPdf(){if(!window.jspdf||!window.jspdf.jsPDF)return;const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});doc.setFontSize(12);doc.text(el.rekapModalTitle.textContent||'Rekap Infrastruktur',14,12);doc.setFontSize(10);doc.text(rekapPopupText().slice(0,5000),14,20,{maxWidth:180});const slug=popupContextSlug();doc.save(`rekap-infrastruktur${slug?'-'+slug:''}.pdf`)}
+const DETAIL_SECTIONS=[{title:'Bangunan Gedung',rows:[['Ketidakteraturan bangunan','jalanLingkunganBangunan'],['Tingkat kepadatan bangunan tinggi','relokasi'],['Kualitas bangunan tidak memenuhi syarat','rtlh']]},{title:'Jalan Lingkungan',rows:[['Jaringan jalan lingkungan tidak melayani seluruh lingkungan','jalanBaru'],['Kualitas permukaan jalan lingkungan buruk','jalanRusak']]},{title:'Penyediaan Air Minum',rows:[['Akses aman air minum tidak tersedia','sabAkses'],['Kebutuhan air minum minimal setiap individu tidak terpenuhi','sabKebutuhan']]},{title:'Drainase Lingkungan',rows:[['Drainase lingkungan tidak tersedia','drainaseBaru'],['Drainase tidak mampu mengalirkan limpasan air hujan sehingga menimbulkan genangan','drainaseLimpasan'],['Kualitas konstruksi drainase lingkungan buruk','drainaseRusak']]},{title:'Pengelolaan Air Limbah',rows:[['Sistem pengelolaan air limbah tidak memenuhi persyaratan teknis','septictankKomunal'],['Prasarana dan sarana air limbah tidak memenuhi persyaratan teknis','jambanPribadi']]},{title:'Pengelolaan Persampahan',rows:[['Prasarana dan sarana persampahan tidak memenuhi persyaratan teknis','tpsTpst'],['Sistem pengelolaan persampahan tidak memenuhi persyaratan teknis','tps3rBank']]},{title:'Proteksi Kebakaran',rows:[['Prasarana proteksi kebakaran tidak tersedia','proteksiJalanSumberAir'],['Sarana proteksi kebakaran tidak tersedia','proteksiAparDamkar']]}];
+function detailFilenameBase(r){const cl=v=>String(v||'').trim().replace(/[\/]+/g,'-').replace(/\.+/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');return `detail-lokasi-${cl(r.kecamatan)}-${cl(r.desa)}-${cl(r.kampung)}-${cl(r.rt_rw)}`.toLowerCase()}
+function buildDetailText(r){const lines=['Detail Lokasi','','Identitas Lokasi',`Kecamatan: ${r.kecamatan||'-'}`,`Desa: ${r.desa||'-'}`,`Kampung: ${r.kampung||'-'}`,`RT/RW: ${r.rt_rw||'-'}`,`Luas: ${decimalFormat.format(parseNumber(r.luas_ha))} Ha`,`Kewenangan: ${r.kewenangan||'-'}`,`Bobot Kumuh: ${avgBobotFormat.format(parseNumber(r.bobot_kumuh))}`,`Tingkat Kekumuhan Awal: ${r.tingkat_kekumuhan_awal||'-'}`,`Pembagian Kawasan Kumuh: ${r.pembagian_kawasan_kumuh||'-'}`,'','Kebutuhan Infrastruktur'];DETAIL_SECTIONS.forEach(s=>{lines.push('',s.title,'Kriteria | Kebutuhan | Numerik');s.rows.forEach(([n,k])=>lines.push(`${n} | ${formatUnitValue(r[k+'_kebutuhan']||0,UNIT_MAP[k]||'')} | ${formatPlainNumber(r[k+'_numerik']||0)}`));});return lines.join('\n')}
+function exportDetailExcel(){if(!state.currentDetailRow||!window.XLSX){alert('Library Excel tidak tersedia.');return;}const r=state.currentDetailRow,rows=[['Detail Lokasi'],[],['Identitas Lokasi'],['Kecamatan',r.kecamatan||'-'],['Desa',r.desa||'-'],['Kampung',r.kampung||'-'],['RT/RW',r.rt_rw||'-'],['Luas',`${decimalFormat.format(parseNumber(r.luas_ha))} Ha`],['Kewenangan',r.kewenangan||'-'],['Bobot Kumuh',avgBobotFormat.format(parseNumber(r.bobot_kumuh))],['Tingkat Kekumuhan Awal',r.tingkat_kekumuhan_awal||'-'],['Pembagian Kawasan Kumuh',r.pembagian_kawasan_kumuh||'-'],[],['Kebutuhan Infrastruktur']];DETAIL_SECTIONS.forEach(s=>{rows.push([], [s.title], ['Kriteria','Kebutuhan','Numerik']);s.rows.forEach(([n,k])=>rows.push([n,formatUnitValue(r[k+'_kebutuhan']||0,UNIT_MAP[k]||''),formatPlainNumber(r[k+'_numerik']||0)]));});const ws=XLSX.utils.aoa_to_sheet(rows);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Detail Lokasi');XLSX.writeFile(wb,`${detailFilenameBase(r)}.xlsx`)}
+function exportDetailPdf(){if(!state.currentDetailRow||!window.jspdf?.jsPDF){alert('Library PDF tidak tersedia.');return;}const r=state.currentDetailRow;const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});let y=40;doc.setFontSize(14);doc.text('Detail Lokasi',40,y);y+=20;doc.setFontSize(10);[['Kecamatan',r.kecamatan||'-'],['Desa',r.desa||'-'],['Kampung',r.kampung||'-'],['RT/RW',r.rt_rw||'-'],['Luas',`${decimalFormat.format(parseNumber(r.luas_ha))} Ha`],['Kewenangan',r.kewenangan||'-'],['Bobot Kumuh',avgBobotFormat.format(parseNumber(r.bobot_kumuh))],['Tingkat Kekumuhan Awal',r.tingkat_kekumuhan_awal||'-'],['Pembagian Kawasan Kumuh',r.pembagian_kawasan_kumuh||'-']].forEach(([k,v])=>{doc.text(`${k}: ${v}`,40,y);y+=14});DETAIL_SECTIONS.forEach(s=>{y+=8;doc.setFontSize(11);doc.text(s.title,40,y);y+=6;doc.autoTable({startY:y+4,head:[['Kriteria','Kebutuhan','Numerik']],body:s.rows.map(([n,k])=>[n,formatUnitValue(r[k+'_kebutuhan']||0,UNIT_MAP[k]||''),formatPlainNumber(r[k+'_numerik']||0)]),theme:'grid',styles:{fontSize:9,cellPadding:4},headStyles:{fillColor:[15,118,110]},margin:{left:40,right:40}});y=doc.lastAutoTable.finalY+6;if(y>760){doc.addPage();y=40;}});doc.save(`${detailFilenameBase(r)}.pdf`)}
+function showDetail(r){state.currentDetailRow=r;const sec=(title,arr)=>`<h3>${title}</h3><table class="detail-sector"><thead><tr><th>Kriteria</th><th>Kebutuhan</th><th>Numerik</th></tr></thead><tbody>${arr.map(([n,k])=>`<tr><td>${n}</td><td class="num">${formatUnitValue(r[k+'_kebutuhan']||0,UNIT_MAP[k]||'')}</td><td class="num">${formatPlainNumber(r[k+'_numerik']||0)}</td></tr>`).join('')}</tbody></table>`;el.detailContent.innerHTML=`<div class="detail-grid"><div><strong>Kecamatan</strong><div>${escapeHtml(r.kecamatan)}</div></div><div><strong>Desa</strong><div>${escapeHtml(r.desa)}</div></div><div><strong>Kampung</strong><div>${escapeHtml(r.kampung)}</div></div><div><strong>RT/RW</strong><div>${escapeHtml(r.rt_rw)}</div></div><div><strong>Luas</strong><div>${decimalFormat.format(parseNumber(r.luas_ha))} Ha</div></div><div><strong>Kewenangan</strong><div>${escapeHtml(r.kewenangan)}</div></div><div><strong>Bobot Kumuh</strong><div>${avgBobotFormat.format(parseNumber(r.bobot_kumuh))}</div></div><div><strong>Tingkat Kekumuhan Awal</strong><div>${escapeHtml(r.tingkat_kekumuhan_awal||'')}</div></div><div><strong>Pembagian Kawasan Kumuh</strong><div>${escapeHtml(r.pembagian_kawasan_kumuh||'')}</div></div></div>${sec('Bangunan Gedung',[['Ketidakteraturan bangunan','jalanLingkunganBangunan'],['Tingkat kepadatan bangunan tinggi','relokasi'],['Kualitas bangunan tidak memenuhi syarat','rtlh']])}${sec('Jalan Lingkungan',[['Jaringan jalan lingkungan tidak melayani seluruh lingkungan','jalanBaru'],['Kualitas permukaan jalan lingkungan buruk','jalanRusak']])}${sec('Penyediaan Air Minum',[['Akses aman air minum tidak tersedia','sabAkses'],['Kebutuhan air minum minimal setiap individu tidak terpenuhi','sabKebutuhan']])}${sec('Drainase Lingkungan',[['Drainase lingkungan tidak tersedia','drainaseBaru'],['Drainase tidak mampu mengalirkan limpasan air hujan sehingga menimbulkan genangan','drainaseLimpasan'],['Kualitas konstruksi drainase lingkungan buruk','drainaseRusak']])}${sec('Pengelolaan Air Limbah',[['Sistem pengelolaan air limbah tidak memenuhi persyaratan teknis','septictankKomunal'],['Prasarana dan sarana air limbah tidak memenuhi persyaratan teknis','jambanPribadi']])}${sec('Pengelolaan Persampahan',[['Prasarana dan sarana persampahan tidak memenuhi persyaratan teknis','tpsTpst'],['Sistem pengelolaan persampahan tidak memenuhi persyaratan teknis','tps3rBank']])}${sec('Proteksi Kebakaran',[['Prasarana proteksi kebakaran tidak tersedia','proteksiJalanSumberAir'],['Sarana proteksi kebakaran tidak tersedia','proteksiAparDamkar']])}`;el.detailModal.classList.remove('is-hidden');const card=el.detailModal.querySelector('.detail-card');if(card)card.scrollTop=0;el.detailModal.scrollTop=0;}
+function closeDetail(){el.detailModal.classList.add('is-hidden');el.detailContent.innerHTML='';state.currentDetailRow=null;const card=el.detailModal.querySelector('.detail-card');if(card)card.scrollTop=0;el.detailModal.scrollTop=0;}
+function goToPage(d){const tp=state.pageSize==='all'?1:Math.max(1,Math.ceil(state.filtered.length/getPageSize()));state.page=Math.min(Math.max(1,state.page+d),tp);renderTable()}
+function handleSort(key){if(state.sortKey===key){state.sortDir=state.sortDir==='asc'?'desc':'asc'}else{state.sortKey=key;state.sortDir=['luas_ha','bobot_kumuh'].includes(key)?'desc':'asc'}state.filtered=applySorting(state.filtered);state.page=1;renderDashboard();if(mapLayersLoaded)refreshMapHighlight()}
+function isFiltered(){return Boolean(el.searchInput.value.trim()||el.kecamatanFilter.value||el.desaFilter.value||el.kewenanganFilter.value||el.kawasanFilter.value)}
+function getActiveColumnsForExport(){return (SECTOR_COLUMNS[state.activeSector]||SECTOR_COLUMNS.ringkasan).filter(c=>c.k!=='aksi')}
+function getActiveTabMeta(){const map={ringkasan:{slug:'ringkasan',title:'Ringkasan'},bangunan:{slug:'bangunan-gedung',title:'Bangunan Gedung'},jalan:{slug:'jalan-lingkungan',title:'Jalan Lingkungan'},air:{slug:'penyediaan-air-minum',title:'Penyediaan Air Minum'},drainase:{slug:'drainase-lingkungan',title:'Drainase Lingkungan'},sanitasi:{slug:'pengelolaan-air-limbah',title:'Pengelolaan Air Limbah'},persampahan:{slug:'pengelolaan-persampahan',title:'Pengelolaan Persampahan'},proteksi:{slug:'proteksi-kebakaran',title:'Proteksi Kebakaran'}};return map[state.activeSector]||map.ringkasan}
+function getFilterSlug(){const parts=[];if(el.kecamatanFilter.value)parts.push('kecamatan-'+el.kecamatanFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.desaFilter.value)parts.push('desa-'+el.desaFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));if(el.kawasanFilter.value)parts.push('kawasan-'+el.kawasanFilter.value.toLowerCase().replace(/[^a-z0-9]+/g,'-'));return parts.filter(Boolean).join('-')}
+function getExportTitle(){const meta=getActiveTabMeta();return `Data ${meta.title} Kawasan Permukiman Kumuh Kabupaten Serang`}
+function exportRows(){const cols=getActiveColumnsForExport();return state.filtered.map(r=>Object.fromEntries(cols.map(c=>[c.l,valForRow(r,c.k).replace(/<[^>]*>/g,'')])))}
+function exportExcel(){if(!window.XLSX){alert('Library export Excel belum berhasil dimuat.');return;}const ws=XLSX.utils.json_to_sheet(exportRows());const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,getActiveTabMeta().title);XLSX.utils.sheet_add_aoa(ws,[[getExportTitle()]],{origin:'A1'});const slug=getActiveTabMeta().slug;const flt=getFilterSlug();const file=`dashboard-kumuh-${slug}${flt?'-'+flt:''}.xlsx`;XLSX.writeFile(wb,file)}
+function exportPdf(){if(!window.jspdf||!window.jspdf.jsPDF){alert('Library export PDF belum berhasil dimuat.');return;}const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});const s=getSummary(state.filtered);doc.setFontSize(14);doc.text(getExportTitle(),14,14);doc.setFontSize(10);doc.text(`Total Lokasi: ${integerFormat.format(s.lokasi)}`,14,24);doc.text(`Total Kecamatan: ${integerFormat.format(s.kecamatan)}`,70,24);doc.text(`Total Desa: ${integerFormat.format(s.desa)}`,130,24);doc.text(`Total Kampung: ${integerFormat.format(s.kampung)}`,180,24);doc.text(`Rata-rata Bobot: ${s.lokasi?avgBobotFormat.format(s.avgBobot):'0'}`,14,31);doc.text(`Total Luas: ${s.lokasi?totalLuasFormat.format(s.totalLuas):'0'} Ha`,90,31);const cols=getActiveColumnsForExport();doc.autoTable({startY:38,head:[cols.map(c=>c.l)],body:state.filtered.map(r=>cols.map(c=>valForRow(r,c.k).replace(/<[^>]*>/g,''))),styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[15,118,110]}});const slug=getActiveTabMeta().slug;const flt=getFilterSlug();doc.save(`dashboard-kumuh-${slug}${flt?'-'+flt:''}.pdf`)}
+function resetFilters(){el.searchInput.value='';el.kecamatanFilter.value='';renderDesaFilter('');el.kewenanganFilter.value='';el.kawasanFilter.value='';state.page=1;applyFilters()}
+async function loadData(){let loaded=null,last='';for(const p of CSV_PATHS){try{const r=await fetch(p);if(r.ok){loaded=await r.text();last=r.headers.get('Last-Modified')||'';break}}catch(_){}}if(!loaded){el.tableBody.innerHTML='<tr><td colspan="20">Gagal memuat CSV.</td></tr>';return;}const sk=el.kecamatanFilter.value,sd=el.desaFilter.value,sw=el.kewenanganFilter.value,skw=el.kawasanFilter.value;state.rawData=parseCsv(loaded);el.sourcePathLabel.textContent=DISPLAY_CSV_PATH;el.lastUpdatedLabel.textContent=last?`Data terakhir diperbarui: ${new Date(last).toLocaleString('id-ID')}`:'Data terakhir diperbarui: -';renderFilters();el.kecamatanFilter.value=[...el.kecamatanFilter.options].some(o=>o.value===sk)?sk:'';renderDesaFilter(sd);el.kewenanganFilter.value=[...el.kewenanganFilter.options].some(o=>o.value===sw)?sw:'';el.kawasanFilter.value=[...el.kawasanFilter.options].some(o=>o.value===skw)?skw:'';applyFilters();}
+el.searchInput.addEventListener('input',applyFilters);el.kecamatanFilter.addEventListener('change',()=>{renderDesaFilter('');applyFilters()});el.desaFilter.addEventListener('change',applyFilters);el.kewenanganFilter.addEventListener('change',applyFilters);el.kawasanFilter.addEventListener('change',applyFilters);el.pageSizeSelect.addEventListener('change',()=>{state.pageSize=el.pageSizeSelect.value==='all'?'all':Number(el.pageSizeSelect.value);state.page=1;renderDashboard();if(mapLayersLoaded)refreshMapHighlight()});el.prevBtn.addEventListener('click',()=>goToPage(-1));el.prevBtnBottom.addEventListener('click',()=>goToPage(-1));el.nextBtn.addEventListener('click',()=>goToPage(1));el.nextBtnBottom.addEventListener('click',()=>goToPage(1));el.resetFilterBtn.addEventListener('click',resetFilters);el.summaryToggleBtn.addEventListener('click',openSummaryModal);el.reloadBtn.addEventListener('click',loadData);el.exportExcelBtn.addEventListener('click',exportExcel);el.exportPdfBtn.addEventListener('click',exportPdf);el.rekapToggleBtn.addEventListener('click',openRekapModal);el.summaryPopupCloseBtn.addEventListener('click',closeSummaryModal);el.summaryModal.addEventListener('click',e=>{if(e.target===el.summaryModal)closeSummaryModal()});el.summaryPopupCopyBtn.addEventListener('click',()=>copyTextWithFeedback(el.summaryPopupCopyBtn,summaryPopupText()));el.summaryPopupExcelBtn.addEventListener('click',exportSummaryPopupExcel);el.summaryPopupPdfBtn.addEventListener('click',exportSummaryPopupPdf);el.rekapPopupCloseBtn.addEventListener('click',closeRekapModal);el.rekapModal.addEventListener('click',e=>{if(e.target===el.rekapModal)closeRekapModal()});el.rekapPopupCopyBtn.addEventListener('click',()=>copyTextWithFeedback(el.rekapPopupCopyBtn,rekapPopupText()));el.rekapPopupExcelBtn.addEventListener('click',exportRekapPopupExcel);el.rekapPopupPdfBtn.addEventListener('click',exportRekapPopupPdf);el.closeDetailBtn.addEventListener('click',closeDetail);el.copyDetailBtn.addEventListener('click',()=>{if(!state.currentDetailRow)return;copyTextWithFeedback(el.copyDetailBtn,buildDetailText(state.currentDetailRow),'Detail tersalin')});el.exportDetailExcelBtn.addEventListener('click',exportDetailExcel);el.exportDetailPdfBtn.addEventListener('click',exportDetailPdf);el.detailModal.addEventListener('click',e=>{if(e.target===el.detailModal)closeDetail()});
+let map=null,kabGeoLayer=null,kecGeoLayer=null,desaGeoLayer=null,mapLayersLoaded=false,mapLayersLoading=false;const serangView=[-6.12,106.15],serangZoom=10;function setMapStatus(msg){if(el.mapStatusNote)el.mapStatusNote.textContent=msg}
+const STYLE_KAB={color:'#0f172a',weight:3,fillColor:'#0f172a',fillOpacity:.02};
+const STYLE_KEC_ACTIVE={color:'#1d4ed8',weight:1.8,fillColor:'#3b82f6',fillOpacity:.08};
+const STYLE_KEC_INACTIVE={color:'#93c5fd',weight:1,fillColor:'#bfdbfe',fillOpacity:.03};
+const STYLE_DESA_ACTIVE={color:'#0f766e',weight:1.2,fillColor:'#14b8a6',fillOpacity:.16};
+const STYLE_DESA_INACTIVE={color:'#94a3b8',weight:.6,fillColor:'#cbd5e1',fillOpacity:.03};
+const MAP_KEY_ALIASES={'PONTANG|KALAPIAN':'PONTANG|KELAPIAN','PULOAMPEL|KEDUNGSOKA':'PULOAMPEL|GEDUNGSOKA','TIRTAYASA|KEMANISAN':'TIRTAYASA|KAMANISAN','TUNJUNGTEJA|TUNJUNGTEJA':'TUNJUNGTEJA|TANJUNGTEJA'};
+function normalizeWilayah(v){return String(v||'').toUpperCase().trim().replace(/[\s]+/g,'').replace(/[.,\-\/]/g,'')}
+function keyKecamatan(k){return normalizeWilayah(k)}
+function keyDesa(k,d){const raw=`${normalizeWilayah(k)}|${normalizeWilayah(d)}`;return MAP_KEY_ALIASES[raw]||raw}
+function getProp(obj,cands){const p=obj||{};for(const c of cands){if(p[c]!==undefined&&p[c]!==null&&String(p[c]).trim()!=='')return p[c]}return '-'}
+async function fetchGeoJson(url,label){console.log(`[Map] Fetch ${label} URL:`,url);const res=await fetch(url);console.log(`[Map] Fetch ${label} status:`,res.status,res.statusText);if(!res.ok)throw new Error(`${label} ${res.status} ${res.statusText}`);const geo=await res.json();console.log(`[Map] ${label} features:`,Array.isArray(geo?.features)?geo.features.length:0);return geo}
+function bindKabPopup(layer,props){const kab=getProp(props,['kab_kota','kabupaten','nama','name']);layer.bindPopup(`<strong>Kabupaten/Kota:</strong> ${escapeHtml(kab)}`)}
+function bindKecPopup(layer,props,active){const kec=getProp(props,['kecamatan','kec','nama','name']);layer.bindPopup(`<strong>Kecamatan:</strong> ${escapeHtml(kec)}<br><strong>Status:</strong> ${active?'Masuk data aktif':'Tidak masuk filter aktif'}`)}
+function bindDesaPopup(layer,props,active){const kab=getProp(props,['kab_kota','kabupaten','nama_kab']);const kec=getProp(props,['kecamatan','kec']);const desa=getProp(props,['kel_desa','desa','kelurahan','name']);layer.bindPopup(`<strong>Kabupaten/Kota:</strong> ${escapeHtml(kab)}<br><strong>Kecamatan:</strong> ${escapeHtml(kec)}<br><strong>Desa/Kelurahan:</strong> ${escapeHtml(desa)}<br><strong>Status:</strong> ${active?'Ada dalam data aktif':'Tidak masuk filter aktif'}`)}
+function refreshMapHighlight(){if(!mapLayersLoaded)return;const activeKec=new Set(state.filtered.map(r=>keyKecamatan(r.kecamatan)).filter(Boolean));const activeDesa=new Set(state.filtered.map(r=>keyDesa(r.kecamatan,r.desa)).filter(Boolean));
+if(kecGeoLayer){let n=0,t=0;kecGeoLayer.eachLayer(layer=>{t++;const props=layer.feature?.properties||{};const k=keyKecamatan(getProp(props,['kecamatan','kec','nama','name']));const active=activeKec.has(k);if(active)n++;layer.setStyle(active?STYLE_KEC_ACTIVE:STYLE_KEC_INACTIVE);bindKecPopup(layer,props,active)});console.log('[Map] Highlight kecamatan aktif:',n,'dari',t)}
+if(desaGeoLayer){let n=0,t=0;desaGeoLayer.eachLayer(layer=>{t++;const props=layer.feature?.properties||{};const key=keyDesa(getProp(props,['kecamatan','kec']),getProp(props,['kel_desa','desa','kelurahan','name']));const active=activeDesa.has(key);if(active)n++;layer.setStyle(active?STYLE_DESA_ACTIVE:STYLE_DESA_INACTIVE);bindDesaPopup(layer,props,active)});console.log('[Map] Highlight desa aktif:',n,'dari',t)}
+if(kecGeoLayer)kecGeoLayer.bringToFront();if(desaGeoLayer)desaGeoLayer.bringToFront();
+}
+function fitBestBounds(){if(kabGeoLayer){const b=kabGeoLayer.getBounds();if(b.isValid()){map.fitBounds(b,{padding:[16,16]});return}}if(kecGeoLayer){const b=kecGeoLayer.getBounds();if(b.isValid()){map.fitBounds(b,{padding:[16,16]});return}}if(desaGeoLayer){const b=desaGeoLayer.getBounds();if(b.isValid()){map.fitBounds(b,{padding:[16,16]});return}}map.setView(serangView,serangZoom)}
+async function loadMapLayers(){if(!map||mapLayersLoaded||mapLayersLoading)return;mapLayersLoading=true;setMapStatus('Memuat layer batas kabupaten/kecamatan/desa...');const errs=[];
+try{const kabGeo=await fetchGeoJson(KAB_GEOJSON_PATH,'Kabupaten');kabGeoLayer=L.geoJSON(kabGeo,{interactive:false,style:()=>STYLE_KAB,onEachFeature:(f,l)=>bindKabPopup(l,f?.properties||{})}).addTo(map)}catch(e){console.error('[Map] Gagal layer Kabupaten:',e);errs.push('Kabupaten')}
+try{const kecGeo=await fetchGeoJson(KEC_GEOJSON_PATH,'Kecamatan');kecGeoLayer=L.geoJSON(kecGeo,{interactive:true,style:()=>STYLE_KEC_INACTIVE,onEachFeature:(f,l)=>bindKecPopup(l,f?.properties||{},false)}).addTo(map)}catch(e){console.error('[Map] Gagal layer Kecamatan:',e);errs.push('Kecamatan')}
+try{const desaGeo=await fetchGeoJson(DESA_GEOJSON_PATH,'Desa');desaGeoLayer=L.geoJSON(desaGeo,{style:()=>STYLE_DESA_INACTIVE,onEachFeature:(f,l)=>bindDesaPopup(l,f?.properties||{},false)}).addTo(map)}catch(e){console.error('[Map] Gagal layer Desa:',e);errs.push('Desa')}
+fitBestBounds();mapLayersLoaded=Boolean(kabGeoLayer||kecGeoLayer||desaGeoLayer);if(mapLayersLoaded){refreshMapHighlight();setMapStatus(errs.length?`Sebagian layer gagal dimuat: ${errs.join(', ')}.`:'Semua layer batas berhasil dimuat.')}else{setMapStatus('Data batas wilayah belum berhasil dimuat.')}mapLayersLoading=false}
+function ensureMap(){if(map||!window.L||!el.mapContainer)return;map=L.map('mapContainer');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);map.setView(serangView,serangZoom)}
+function openMap(){if(!el.mapModal)return;el.mapModal.classList.remove('is-hidden');ensureMap();setTimeout(()=>{if(map){map.invalidateSize();loadMapLayers().then(()=>refreshMapHighlight())}},50)}
+function closeMap(){if(el.mapModal)el.mapModal.classList.add('is-hidden')}
+function resetMap(){if(!map)return;fitBestBounds()}
+if(el.openMapBtn)el.openMapBtn.addEventListener('click',openMap);if(el.closeMapBtn)el.closeMapBtn.addEventListener('click',closeMap);if(el.resetMapBtn)el.resetMapBtn.addEventListener('click',resetMap);if(el.mapModal)el.mapModal.addEventListener('click',e=>{if(e.target===el.mapModal)closeMap()});
+el.cardTotalKecamatan.addEventListener('click',()=>openListModal('kecamatan'));el.cardTotalDesa.addEventListener('click',()=>openListModal('desa'));el.cardTotalKampung.addEventListener('click',()=>openListModal('kampung'));el.closeListBtn.addEventListener('click',closeListModal);el.copyListBtn.addEventListener('click',copyList);el.exportListExcelBtn.addEventListener('click',exportPopupExcel);el.exportListPdfBtn.addEventListener('click',exportPopupPdf);el.listModal.addEventListener('click',e=>{if(e.target===el.listModal)closeListModal()});
+loadData();
+</script></body></html>
