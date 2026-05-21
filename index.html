@@ -53,6 +53,8 @@
     .control-action-row button{min-width:120px; padding:8px 12px; font-size:13px; min-height:36px;}
     .summary-actions{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
     .sector-tabs-wrap{max-width:100%;}
+    .desktop-table-wrapper{display:block;}
+    .mobile-table-wrapper{display:none;}
     .mobile-aspect-select-wrap{display:none;}
     .sector-tabs{display:flex; gap:6px; flex-wrap:nowrap; margin:0; min-width:0; width:100%; justify-content:space-between;}
     .popup-modal{position:fixed; inset:0; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center; padding:16px; z-index:1260;}
@@ -124,8 +126,8 @@
       .sector-tabs-wrap{display:none;}
       .mobile-aspect-select-wrap{display:block;margin:6px 0 8px;}
       .mobile-aspect-select{height:40px;font-size:13px;padding:8px 10px;margin:2px 0 6px;}
-      .table-wrap{display:none;}
-      .mobile-compact-wrap{display:block;width:100%;overflow-x:auto;}
+      .desktop-table-wrapper{display:none;}
+      .mobile-table-wrapper{display:block;width:100%;overflow-x:auto;}
       .mobile-compact-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;}
       .mobile-compact-table th,.mobile-compact-table td{padding:6px;vertical-align:top;border-bottom:1px solid #eef2f7;word-break:break-word;}
       .mobile-compact-table th{font-size:12px;background:#f8fafc;color:#334155;text-align:left;}
@@ -190,7 +192,7 @@
 
     <section class="panel"><div class="controls-block"><div class="control-filter-grid"><input id="searchInput" type="text" placeholder="Cari RT/RW, kampung, desa, kecamatan..." /><select id="kecamatanFilter"><option value="">Semua Kecamatan</option></select><select id="desaFilter"><option value="">Semua Desa</option></select><select id="kewenanganFilter"><option value="">Semua Kewenangan</option></select><select id="kawasanFilter"><option value="">Semua Kawasan</option></select><select id="pageSizeSelect"><option value="25">25 / halaman</option><option value="50">50 / halaman</option><option value="100">100 / halaman</option><option value="200">200 / halaman</option><option value="300">300 / halaman</option><option value="all" selected>Semua muncul</option></select></div><div class="control-action-row"><button id="resetFilterBtn" class="secondary-btn">Reset</button><button id="reloadBtn">Muat Ulang</button><button id="exportExcelBtn" class="export-btn">Excel</button><button id="exportPdfBtn" class="export-btn">PDF</button><button id="openMapBtn" class="secondary-btn">Peta</button></div><div class="mobile-aspect-select-wrap"><label for="mobileAspectSelect" class="mobile-aspect-label">Pilih Aspek</label><select id="mobileAspectSelect" class="mobile-aspect-select"></select></div><div class="sector-tabs-wrap aspect-tabs-scroll"><div id="sectorTabs" class="sector-tabs"></div></div></div>
     <div class="meta"><span id="resultInfo">Menampilkan 0 data</span><div id="paginationTop" class="pagination"><button id="prevBtn">Sebelumnya</button><span id="pageInfo">Hal 1/1</span><button id="nextBtn">Berikutnya</button></div></div>
-    <div class="table-wrap"><table><thead><tr id="tableHeadRow"></tr></thead><tbody id="tableBody"></tbody></table></div><div id="mobileCompactWrap" class="mobile-compact-wrap"><table class="mobile-compact-table"><thead><tr id="mobileCompactHead"></tr></thead><tbody id="mobileCompactBody"></tbody></table></div>
+    <div class="table-wrap desktop-table-wrapper"><table><thead><tr id="tableHeadRow"></tr></thead><tbody id="tableBody"></tbody></table></div><div id="mobileCompactWrap" class="mobile-compact-wrap mobile-table-wrapper"><table class="mobile-compact-table"><thead><tr id="mobileCompactHead"></tr></thead><tbody id="mobileCompactBody"></tbody></table></div>
     <div class="meta"><span id="resultInfoBottom">Menampilkan 0 data</span><div id="paginationBottom" class="pagination"><button id="prevBtnBottom">Sebelumnya</button><span id="pageInfoBottom">Hal 1/1</span><button id="nextBtnBottom">Berikutnya</button></div></div>
   </section>
 </main>
