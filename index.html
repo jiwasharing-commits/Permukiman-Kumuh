@@ -152,9 +152,10 @@
       .card { padding: 10px; min-width: 0; }
       .card strong { font-size: 10px; margin-bottom: 6px; letter-spacing: .02em; }
       .card div { font-size: 18px; }
-      .control-filter-grid { grid-template-columns: 1fr; gap: 8px; }
-      .control-filter-grid input,
+      .control-filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+      .control-filter-grid input{grid-column:1 / -1;}
       .control-filter-grid select { width:100%; min-width:0; height:40px; font-size:13px; padding:8px 10px; }
+      .control-filter-grid #pageSizeSelect{grid-column:1 / -1;}
       .control-action-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
       .control-action-row button { min-width:0; width:100%; min-height:36px; padding:7px 8px; font-size:12px; }
       .aspect-tabs-scroll{padding-bottom:0;}
