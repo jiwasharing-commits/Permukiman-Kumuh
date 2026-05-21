@@ -21,6 +21,11 @@
     .cards { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
     .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .08); border: 1px solid #e5e7eb; }
     .card strong { display: block; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+    .card-head .card-detail-hint{font-size:11px;color:#0f766e;font-weight:600;white-space:nowrap;}
+    .stat-card-clickable{cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;}
+    .stat-card-clickable:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(15,23,42,.16);border-color:#99f6e4;}
+    .stat-card-clickable:active{transform:scale(.98);}
     .card div { font-size: 23px; font-weight: 700; color: #0f766e; }
     .card-clickable { cursor:pointer; transition: transform .15s ease, box-shadow .15s ease; }
     .card-clickable:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(15,23,42,.12); }
@@ -150,6 +155,8 @@
       .proto-badge { font-size:10px; padding:2px 7px; }
       .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .card { padding: 10px; min-width: 0; }
+      .card-head .card-detail-hint{font-size:10px;}
+      .stat-card-clickable:active{transform:scale(.98);background:#f8fffd;}
       .card strong { font-size: 10px; margin-bottom: 6px; letter-spacing: .02em; }
       .card div { font-size: 18px; }
       .control-filter-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
@@ -187,7 +194,7 @@
 <body>
 <main class="container">
   <header class="hero"><h1>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</h1><div class="source-info"><span class="proto-badge">Prototype</span><span id="lastUpdatedLabel">Data terakhir diperbarui: -</span></div></header>
-  <section class="cards"><article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article><article class="card card-clickable" id="cardTotalKecamatan"><strong>Total Kecamatan</strong><div id="totalKecamatan">0</div></article><article class="card card-clickable" id="cardTotalDesa"><strong>Total Desa</strong><div id="totalDesa">0</div></article><article class="card card-clickable" id="cardTotalKampung"><strong>Total Kampung</strong><div id="totalKampung">0</div></article><article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article><article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article></section>
+  <section class="cards"><article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article><article class="card card-clickable stat-card-clickable" id="cardTotalKecamatan" title="Klik untuk melihat daftar kecamatan" aria-label="Klik untuk melihat daftar kecamatan"><div class="card-head"><strong>Total Kecamatan</strong><span class="card-detail-hint">Detail ›</span></div><div id="totalKecamatan">0</div></article><article class="card card-clickable stat-card-clickable" id="cardTotalDesa" title="Klik untuk melihat daftar desa" aria-label="Klik untuk melihat daftar desa"><div class="card-head"><strong>Total Desa</strong><span class="card-detail-hint">Detail ›</span></div><div id="totalDesa">0</div></article><article class="card card-clickable stat-card-clickable" id="cardTotalKampung" title="Klik untuk melihat daftar kampung" aria-label="Klik untuk melihat daftar kampung"><div class="card-head"><strong>Total Kampung</strong><span class="card-detail-hint">Detail ›</span></div><div id="totalKampung">0</div></article><article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article><article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article></section>
   <div class="summary-actions"><button id="summaryToggleBtn" class="secondary-btn">Tampilkan Ringkasan & Top 10</button><button id="rekapToggleBtn" class="secondary-btn">Tampilkan Rekap Infrastruktur</button></div>
 
 
