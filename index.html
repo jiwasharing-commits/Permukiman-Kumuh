@@ -18,6 +18,8 @@
     .hero h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; }
     .source-info { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: #ecfeff; }
     .source-info span { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 6px 10px; }
+    .portal-link{display:inline-flex;align-items:center;gap:4px;margin:0 0 10px;color:#ecfeff;text-decoration:none;font-size:12px;font-weight:700;opacity:.92;}
+    .portal-link:hover{opacity:1;text-decoration:underline;}
     .cards { display: grid; grid-template-columns: repeat(6, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
     .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 8px rgba(15, 23, 42, .08); border: 1px solid #e5e7eb; }
     .card strong { display: block; color: #475569; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
@@ -153,6 +155,7 @@
       .source-info { margin-top: 8px; gap: 6px; font-size: 11px; }
       .source-info span { padding: 4px 8px; }
       .proto-badge { font-size:10px; padding:2px 7px; }
+      .portal-link{font-size:11px;margin-bottom:8px;}
       .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .card { padding: 10px; min-width: 0; }
       .card-head .card-detail-hint{font-size:10px;}
@@ -193,7 +196,7 @@
 </head>
 <body>
 <main class="container">
-  <header class="hero"><h1>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</h1><div class="source-info"><span class="proto-badge">Prototype</span><span id="lastUpdatedLabel">Data terakhir diperbarui: -</span></div></header>
+  <header class="hero"><a class="portal-link" href="portal.html">← Portal PKP</a><h1>Dashboard Data Kawasan Permukiman Kumuh Kabupaten Serang</h1><div class="source-info"><span class="proto-badge">Prototype</span><span id="lastUpdatedLabel">Data terakhir diperbarui: -</span></div></header>
   <section class="cards"><article class="card"><strong>Total Lokasi / RT</strong><div id="totalData">0</div></article><article class="card card-clickable stat-card-clickable" id="cardTotalKecamatan" title="Klik untuk melihat daftar kecamatan" aria-label="Klik untuk melihat daftar kecamatan"><div class="card-head"><strong>Total Kecamatan</strong><span class="card-detail-hint">Detail ›</span></div><div id="totalKecamatan">0</div></article><article class="card card-clickable stat-card-clickable" id="cardTotalDesa" title="Klik untuk melihat daftar desa" aria-label="Klik untuk melihat daftar desa"><div class="card-head"><strong>Total Desa</strong><span class="card-detail-hint">Detail ›</span></div><div id="totalDesa">0</div></article><article class="card card-clickable stat-card-clickable" id="cardTotalKampung" title="Klik untuk melihat daftar kampung" aria-label="Klik untuk melihat daftar kampung"><div class="card-head"><strong>Total Kampung</strong><span class="card-detail-hint">Detail ›</span></div><div id="totalKampung">0</div></article><article class="card"><strong>Rata-rata Bobot</strong><div id="avgBobot">0</div></article><article class="card"><strong>Total Luas (Ha)</strong><div id="sumLuas">0</div></article></section>
   <div class="summary-actions"><button id="summaryToggleBtn" class="secondary-btn">Tampilkan Ringkasan & Top 10</button><button id="rekapToggleBtn" class="secondary-btn">Tampilkan Rekap Infrastruktur</button></div>
 
