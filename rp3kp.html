@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard PKP Kabupaten Serang - Modul RP3KP</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, sans-serif; background:#f3f6fb; color:#1f2937; }
+    .container { max-width: 1120px; margin:0 auto; padding:24px 16px 32px; }
+
+    .hero { background: linear-gradient(135deg, #0f766e, #115e59); color:#fff; border-radius:14px; padding:20px; box-shadow:0 10px 28px rgba(15,118,110,.18); margin-bottom:14px; }
+    .hero h1 { margin:0 0 8px; font-size:30px; line-height:1.2; }
+    .badge { display:inline-block; border:1px solid rgba(255,255,255,.28); background:rgba(255,255,255,.15); border-radius:999px; padding:4px 10px; font-size:11px; font-weight:700; }
+    .subtitle { margin:10px 0 6px; font-size:18px; font-weight:700; color:#ecfeff; }
+    .desc { margin:0; font-size:14px; line-height:1.45; color:#e2f4f1; }
+
+    .back-link { display:inline-block; margin: 0 0 14px; text-decoration:none; background:#fff; color:#0f766e; border:1px solid #cbd5e1; border-radius:9px; padding:9px 12px; font-size:13px; font-weight:700; }
+
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:12px; margin-bottom:14px; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(15,23,42,.08); }
+    .card h3 { margin:0 0 8px; font-size:13px; color:#475569; text-transform:uppercase; letter-spacing:.03em; }
+    .value { margin:0; font-size:18px; font-weight:700; color:#0f766e; }
+
+    .panel { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(15,23,42,.08); margin-bottom:12px; }
+    .panel h2 { margin:0 0 8px; font-size:16px; color:#0f172a; }
+    .panel p { margin:0; color:#475569; font-size:14px; line-height:1.45; }
+
+    @media (max-width: 768px) {
+      .container { padding:14px 12px 24px; }
+      .hero { padding:14px; }
+      .hero h1 { font-size:22px; }
+      .subtitle { font-size:16px; }
+      .desc, .panel p { font-size:13px; }
+      .grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="hero">
+      <h1>Dashboard PKP Kabupaten Serang</h1>
+      <span class="badge">Prototype</span>
+      <p class="subtitle">Modul RP3KP</p>
+      <p class="desc">Dashboard RP3KP sedang disiapkan sebagai media data dan monitoring perencanaan pembangunan dan pengembangan perumahan dan kawasan permukiman Kabupaten Serang.</p>
+    </header>
+
+    <a class="back-link" href="portal.html">← Kembali ke Portal PKP</a>
+
+    <section aria-label="Statistik Ringkas" class="grid">
+      <article class="card"><h3>Total Data</h3><p class="value">Dalam Pengembangan</p></article>
+      <article class="card"><h3>Total Kecamatan</h3><p class="value">Dalam Pengembangan</p></article>
+      <article class="card"><h3>Total Desa</h3><p class="value">Dalam Pengembangan</p></article>
+    </section>
+
+    <section class="panel" aria-label="Area Data RP3KP">
+      <h2>Area Data RP3KP</h2>
+      <p>Data RP3KP akan ditambahkan pada tahap berikutnya.</p>
+    </section>
+
+    <section class="panel" aria-label="Area Peta dan Visualisasi RP3KP">
+      <h2>Area Peta/Visualisasi</h2>
+      <p>Peta dan visualisasi RP3KP akan dikembangkan setelah struktur data tersedia.</p>
+    </section>
+  </main>
+</body>
+</html>
